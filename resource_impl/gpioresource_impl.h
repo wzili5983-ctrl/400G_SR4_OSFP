@@ -36,6 +36,7 @@
 #include "basedef.h"
 
 typedef struct {
+    BYTE chipid; /* Owning chip of the pin (CHIP_ID_xxx); CHIP_ID_MCU for on-chip MCU pins. */
     BYTE id;
     DWORD port; /* One GPIO peripheral per resource. */
     DWORD pin;  /* Exactly one GPIO_PIN_x bit. */

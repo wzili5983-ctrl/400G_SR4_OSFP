@@ -35,7 +35,6 @@
 
 #include "chipresource_impl.h"
 
-VOID ChipRegister(VOID); /* Compatibility: static table needs no registration. */
 DWORD WriteChip(BYTE chipid, DWORD addr, DWORD data);
 DWORD ReadChip(BYTE chipid, DWORD addr, DWORD *data);
 DWORD InitChip(BYTE rsttype);

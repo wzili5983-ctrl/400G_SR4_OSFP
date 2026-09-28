@@ -9,6 +9,7 @@
 #include "busresource_impl.h"
 
 DWORD InitBus(BYTE id);
-DWORD TransferBus(BYTE id, BYTE address7, CONST BYTE *tx, BYTE txlen, BYTE *rx, BYTE rxlen);
+DWORD WriteBus(BYTE id, CONST BYTE *tx, BYTE txlen);
+DWORD ReadBus(BYTE id, BYTE *rx, BYTE rxlen);
 
 #endif

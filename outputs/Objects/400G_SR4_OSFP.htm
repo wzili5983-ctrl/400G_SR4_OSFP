@@ -3,11 +3,11 @@
 <title>Static Call Graph - [.\Objects\400G_SR4_OSFP.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\400G_SR4_OSFP.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6220000: Last Updated: Wed Sep 23 10:01:22 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6210000: Last Updated: Sat Sep 26 15:13:44 2026
 <BR><P>
-<H3>Maximum Stack Usage =        412 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
+<H3>Maximum Stack Usage =        172 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
-BcmBscMemoryTransfer &rArr; BcmGd32I2cTransfer &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
+BoardBusWrite &rArr; SpiBusWrite &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
 <P>
 <H3>
 Mutually Recursive functions
@@ -19,7 +19,6 @@ Mutually Recursive functions
  <LI><a href="#[6]">SVC_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[6]">SVC_Handler</a><BR>
  <LI><a href="#[7]">DebugMon_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[7]">DebugMon_Handler</a><BR>
  <LI><a href="#[8]">PendSV_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[8]">PendSV_Handler</a><BR>
- <LI><a href="#[9]">SysTick_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[9]">SysTick_Handler</a><BR>
  <LI><a href="#[15]">ADC_CMP_IRQHandler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[15]">ADC_CMP_IRQHandler</a><BR>
 </UL>
 <P>
@@ -27,14 +26,14 @@ Mutually Recursive functions
 Function Pointers
 </H3><UL>
  <LI><a href="#[15]">ADC_CMP_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
- <LI><a href="#[40]">BcmBscMemoryTransfer</a> from bcm_bsc.o(.text.BcmBscMemoryTransfer) referenced from bcm_gd32_i2c.o(.data.memory_transfer)
  <LI><a href="#[39]">BoardAdcInit</a> from adcresource_impl.o(.text.BoardAdcInit) referenced 10 times from adcresource_impl.o(.rodata.g_AdcInfoImpl)
  <LI><a href="#[38]">BoardAdcRead</a> from adcresource_impl.o(.text.BoardAdcRead) referenced 10 times from adcresource_impl.o(.rodata.g_AdcInfoImpl)
- <LI><a href="#[3b]">BoardBusInit</a> from busresource_impl.o(.text.BoardBusInit) referenced 2 times from busresource_impl.o(.rodata.g_BusInfo)
- <LI><a href="#[3c]">BoardBusTransfer</a> from busresource_impl.o(.text.BoardBusTransfer) referenced 2 times from busresource_impl.o(.rodata.g_BusInfo)
- <LI><a href="#[3f]">BoardGpioInit</a> from gpioresource_impl.o(.text.BoardGpioInit) referenced 17 times from gpioresource_impl.o(.rodata.g_GpioInfoImpl)
- <LI><a href="#[3e]">BoardGpioRead</a> from gpioresource_impl.o(.text.BoardGpioRead) referenced 17 times from gpioresource_impl.o(.rodata.g_GpioInfoImpl)
- <LI><a href="#[3d]">BoardGpioWrite</a> from gpioresource_impl.o(.text.BoardGpioWrite) referenced 12 times from gpioresource_impl.o(.rodata.g_GpioInfoImpl)
+ <LI><a href="#[3b]">BoardBusInit</a> from busresource_impl.o(.text.BoardBusInit) referenced 3 times from busresource_impl.o(.rodata.g_BusInfo)
+ <LI><a href="#[3d]">BoardBusRead</a> from busresource_impl.o(.text.BoardBusRead) referenced 3 times from busresource_impl.o(.rodata.g_BusInfo)
+ <LI><a href="#[3c]">BoardBusWrite</a> from busresource_impl.o(.text.BoardBusWrite) referenced 3 times from busresource_impl.o(.rodata.g_BusInfo)
+ <LI><a href="#[40]">BoardGpioInit</a> from gpioresource_impl.o(.text.BoardGpioInit) referenced 17 times from gpioresource_impl.o(.rodata.g_GpioInfoImpl)
+ <LI><a href="#[3f]">BoardGpioRead</a> from gpioresource_impl.o(.text.BoardGpioRead) referenced 17 times from gpioresource_impl.o(.rodata.g_GpioInfoImpl)
+ <LI><a href="#[3e]">BoardGpioWrite</a> from gpioresource_impl.o(.text.BoardGpioWrite) referenced 12 times from gpioresource_impl.o(.rodata.g_GpioInfoImpl)
  <LI><a href="#[3a]">BoardInit</a> from boardresource_impl.o(.text.BoardInit) referenced from boardresource_impl.o(.rodata.g_BoardOps)
  <LI><a href="#[4]">BusFault_Handler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[2a]">CLA_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
@@ -72,7 +71,7 @@ Function Pointers
  <LI><a href="#[30]">SPI3_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[32]">SRAM_ECC_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[6]">SVC_Handler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
- <LI><a href="#[9]">SysTick_Handler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
+ <LI><a href="#[9]">SysTick_Handler</a> from mcu_clock.o(.text.SysTick_Handler) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[34]">SystemInit</a> from system_gd32e511_512.o(.text.SystemInit) referenced from startup_gd32e511_512.o(.text)
  <LI><a href="#[16]">TIMER0_BRK_UP_TRG_COM_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[17]">TIMER0_Channel_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
@@ -81,16 +80,16 @@ Function Pointers
  <LI><a href="#[1e]">TIMER15_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[1f]">TIMER16_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[18]">TIMER1_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
- <LI><a href="#[19]">TIMER2_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
+ <LI><a href="#[19]">TIMER2_IRQHandler</a> from timer2_scheduler.o(.text.TIMER2_IRQHandler) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[1a]">TIMER5_DAC0_1_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[1b]">TIMER6_DAC2_3_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
+ <LI><a href="#[36]">TaskBaseAdSamples</a> from adcresource_impl.o(.text.TaskBaseAdSamples) referenced 2 times from adcresource_impl.o(.text.BoardAdcInit)
+ <LI><a href="#[37]">TaskRssiAdSamples</a> from adcresource_impl.o(.text.TaskRssiAdSamples) referenced 2 times from adcresource_impl.o(.text.BoardAdcInit)
  <LI><a href="#[25]">UART3_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[24]">USART0_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[5]">UsageFault_Handler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[a]">WWDGT_IRQHandler</a> from startup_gd32e511_512.o(.text) referenced from startup_gd32e511_512.o(RESET)
  <LI><a href="#[35]">__main</a> from __main.o(!!!main) referenced from startup_gd32e511_512.o(.text)
- <LI><a href="#[36]">read_bus</a> from bcm_gd32_i2c.o(.text.read_bus) referenced from bcm_gd32_i2c.o(.rodata..L__const.BcmGd32I2cInit.bus)
- <LI><a href="#[37]">write_bus</a> from bcm_gd32_i2c.o(.text.write_bus) referenced from bcm_gd32_i2c.o(.rodata..L__const.BcmGd32I2cInit.bus)
 </UL>
 <P>
 <H3>
@@ -110,9 +109,9 @@ Global Symbols
 <BR><BR>[Calls]<UL><LI><a href="#[42]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry
 </UL>
 
-<P><STRONG><a name="[a4]"></a>__scatterload_rt2_thumb_only</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __scatter.o(!!!scatter), UNUSED)
+<P><STRONG><a name="[bf]"></a>__scatterload_rt2_thumb_only</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __scatter.o(!!!scatter), UNUSED)
 
-<P><STRONG><a name="[a5]"></a>__scatterload_loop</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __scatter.o(!!!scatter), UNUSED)
+<P><STRONG><a name="[c0]"></a>__scatterload_loop</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __scatter.o(!!!scatter), UNUSED)
 
 <P><STRONG><a name="[44]"></a>__scatterload_copy</STRONG> (Thumb, 26 bytes, Stack size unknown bytes, __scatter_copy.o(!!handler_copy), UNUSED)
 <BR><BR>[Calls]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__scatterload_copy
@@ -120,9 +119,9 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__scatterload_copy
 </UL>
 
-<P><STRONG><a name="[a6]"></a>__scatterload_null</STRONG> (Thumb, 2 bytes, Stack size unknown bytes, __scatter.o(!!handler_null), UNUSED)
+<P><STRONG><a name="[c1]"></a>__scatterload_null</STRONG> (Thumb, 2 bytes, Stack size unknown bytes, __scatter.o(!!handler_null), UNUSED)
 
-<P><STRONG><a name="[a7]"></a>__scatterload_zeroinit</STRONG> (Thumb, 28 bytes, Stack size unknown bytes, __scatter_zi.o(!!handler_zi), UNUSED)
+<P><STRONG><a name="[c2]"></a>__scatterload_zeroinit</STRONG> (Thumb, 28 bytes, Stack size unknown bytes, __scatter_zi.o(!!handler_zi), UNUSED)
 
 <P><STRONG><a name="[4a]"></a>__rt_lib_init</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit.o(.ARM.Collect$$libinit$$00000000))
 <BR><BR>[Called By]<UL><LI><a href="#[49]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry_li
@@ -132,72 +131,72 @@ Global Symbols
 <BR><BR>[Calls]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_fp_init
 </UL>
 
-<P><STRONG><a name="[a8]"></a>__rt_lib_init_alloca_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000030))
+<P><STRONG><a name="[c3]"></a>__rt_lib_init_alloca_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000030))
 
-<P><STRONG><a name="[a9]"></a>__rt_lib_init_argv_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000002E))
+<P><STRONG><a name="[c4]"></a>__rt_lib_init_argv_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000002E))
 
-<P><STRONG><a name="[aa]"></a>__rt_lib_init_atexit_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000001D))
+<P><STRONG><a name="[c5]"></a>__rt_lib_init_atexit_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000001D))
 
-<P><STRONG><a name="[ab]"></a>__rt_lib_init_clock_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000023))
+<P><STRONG><a name="[c6]"></a>__rt_lib_init_clock_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000023))
 
-<P><STRONG><a name="[ac]"></a>__rt_lib_init_cpp_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000034))
+<P><STRONG><a name="[c7]"></a>__rt_lib_init_cpp_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000034))
 
-<P><STRONG><a name="[ad]"></a>__rt_lib_init_exceptions_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000032))
+<P><STRONG><a name="[c8]"></a>__rt_lib_init_exceptions_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000032))
 
-<P><STRONG><a name="[ae]"></a>__rt_lib_init_fp_trap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000021))
+<P><STRONG><a name="[c9]"></a>__rt_lib_init_fp_trap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000021))
 
-<P><STRONG><a name="[af]"></a>__rt_lib_init_getenv_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000025))
+<P><STRONG><a name="[ca]"></a>__rt_lib_init_getenv_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000025))
 
-<P><STRONG><a name="[b0]"></a>__rt_lib_init_heap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000000C))
+<P><STRONG><a name="[cb]"></a>__rt_lib_init_heap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000000C))
 
-<P><STRONG><a name="[b1]"></a>__rt_lib_init_lc_collate_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000013))
+<P><STRONG><a name="[cc]"></a>__rt_lib_init_lc_collate_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000013))
 
-<P><STRONG><a name="[b2]"></a>__rt_lib_init_lc_ctype_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000015))
+<P><STRONG><a name="[cd]"></a>__rt_lib_init_lc_ctype_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000015))
 
-<P><STRONG><a name="[b3]"></a>__rt_lib_init_lc_monetary_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000017))
+<P><STRONG><a name="[ce]"></a>__rt_lib_init_lc_monetary_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000017))
 
-<P><STRONG><a name="[b4]"></a>__rt_lib_init_lc_numeric_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000019))
+<P><STRONG><a name="[cf]"></a>__rt_lib_init_lc_numeric_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000019))
 
-<P><STRONG><a name="[b5]"></a>__rt_lib_init_lc_time_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000001B))
+<P><STRONG><a name="[d0]"></a>__rt_lib_init_lc_time_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000001B))
 
-<P><STRONG><a name="[b6]"></a>__rt_lib_init_preinit_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000006))
+<P><STRONG><a name="[d1]"></a>__rt_lib_init_preinit_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000006))
 
-<P><STRONG><a name="[b7]"></a>__rt_lib_init_rand_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000010))
+<P><STRONG><a name="[d2]"></a>__rt_lib_init_rand_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000010))
 
-<P><STRONG><a name="[b8]"></a>__rt_lib_init_relocate_pie_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000004))
+<P><STRONG><a name="[d3]"></a>__rt_lib_init_relocate_pie_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000004))
 
-<P><STRONG><a name="[b9]"></a>__rt_lib_init_return</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000035))
+<P><STRONG><a name="[d4]"></a>__rt_lib_init_return</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000035))
 
-<P><STRONG><a name="[ba]"></a>__rt_lib_init_signal_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000001F))
+<P><STRONG><a name="[d5]"></a>__rt_lib_init_signal_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000001F))
 
-<P><STRONG><a name="[bb]"></a>__rt_lib_init_stdio_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000027))
+<P><STRONG><a name="[d6]"></a>__rt_lib_init_stdio_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$00000027))
 
-<P><STRONG><a name="[bc]"></a>__rt_lib_init_user_alloc_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000000E))
+<P><STRONG><a name="[d7]"></a>__rt_lib_init_user_alloc_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libinit2.o(.ARM.Collect$$libinit$$0000000E))
 
 <P><STRONG><a name="[4f]"></a>__rt_lib_shutdown</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown.o(.ARM.Collect$$libshutdown$$00000000))
 <BR><BR>[Called By]<UL><LI><a href="#[4e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_exit_ls
 </UL>
 
-<P><STRONG><a name="[bd]"></a>__rt_lib_shutdown_cpp_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000002))
+<P><STRONG><a name="[d8]"></a>__rt_lib_shutdown_cpp_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000002))
 
-<P><STRONG><a name="[be]"></a>__rt_lib_shutdown_fp_trap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000007))
+<P><STRONG><a name="[d9]"></a>__rt_lib_shutdown_fp_trap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000007))
 
-<P><STRONG><a name="[bf]"></a>__rt_lib_shutdown_heap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$0000000F))
+<P><STRONG><a name="[da]"></a>__rt_lib_shutdown_heap_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$0000000F))
 
-<P><STRONG><a name="[c0]"></a>__rt_lib_shutdown_return</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000010))
+<P><STRONG><a name="[db]"></a>__rt_lib_shutdown_return</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000010))
 
-<P><STRONG><a name="[c1]"></a>__rt_lib_shutdown_signal_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$0000000A))
+<P><STRONG><a name="[dc]"></a>__rt_lib_shutdown_signal_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$0000000A))
 
-<P><STRONG><a name="[c2]"></a>__rt_lib_shutdown_stdio_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000004))
+<P><STRONG><a name="[dd]"></a>__rt_lib_shutdown_stdio_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$00000004))
 
-<P><STRONG><a name="[c3]"></a>__rt_lib_shutdown_user_alloc_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$0000000C))
+<P><STRONG><a name="[de]"></a>__rt_lib_shutdown_user_alloc_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, libshutdown2.o(.ARM.Collect$$libshutdown$$0000000C))
 
 <P><STRONG><a name="[42]"></a>__rt_entry</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry.o(.ARM.Collect$$rtentry$$00000000))
 <BR><BR>[Called By]<UL><LI><a href="#[35]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__main
 <LI><a href="#[43]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__scatterload_rt2
 </UL>
 
-<P><STRONG><a name="[c4]"></a>__rt_entry_presh_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$00000002))
+<P><STRONG><a name="[df]"></a>__rt_entry_presh_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$00000002))
 
 <P><STRONG><a name="[47]"></a>__rt_entry_sh</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry4.o(.ARM.Collect$$rtentry$$00000004))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8 + Unknown Stack Size
@@ -210,7 +209,7 @@ Global Symbols
 <BR><BR>[Calls]<UL><LI><a href="#[4a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_lib_init
 </UL>
 
-<P><STRONG><a name="[c5]"></a>__rt_entry_postsh_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$00000009))
+<P><STRONG><a name="[e0]"></a>__rt_entry_postsh_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$00000009))
 
 <P><STRONG><a name="[4b]"></a>__rt_entry_main</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$0000000D))
 <BR><BR>[Stack]<UL><LI>Max Depth = 68 + Unknown Stack Size
@@ -220,9 +219,9 @@ Global Symbols
 <LI><a href="#[4d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;exit
 </UL>
 
-<P><STRONG><a name="[c6]"></a>__rt_entry_postli_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$0000000C))
+<P><STRONG><a name="[e1]"></a>__rt_entry_postli_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __rtentry2.o(.ARM.Collect$$rtentry$$0000000C))
 
-<P><STRONG><a name="[59]"></a>__rt_exit</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rtexit.o(.ARM.Collect$$rtexit$$00000000))
+<P><STRONG><a name="[54]"></a>__rt_exit</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rtexit.o(.ARM.Collect$$rtexit$$00000000))
 <BR><BR>[Called By]<UL><LI><a href="#[4d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;exit
 </UL>
 
@@ -230,7 +229,7 @@ Global Symbols
 <BR><BR>[Calls]<UL><LI><a href="#[4f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_lib_shutdown
 </UL>
 
-<P><STRONG><a name="[c7]"></a>__rt_exit_prels_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rtexit2.o(.ARM.Collect$$rtexit$$00000002))
+<P><STRONG><a name="[e2]"></a>__rt_exit_prels_1</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rtexit2.o(.ARM.Collect$$rtexit$$00000002))
 
 <P><STRONG><a name="[50]"></a>__rt_exit_exit</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rtexit2.o(.ARM.Collect$$rtexit$$00000004))
 <BR><BR>[Calls]<UL><LI><a href="#[51]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_sys_exit
@@ -292,13 +291,6 @@ Global Symbols
 <BR><BR>[Calls]<UL><LI><a href="#[8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PendSV_Handler
 </UL>
 <BR>[Called By]<UL><LI><a href="#[8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PendSV_Handler
-</UL>
-<BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
-</UL>
-<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
-<BR><BR>[Calls]<UL><LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTick_Handler
-</UL>
-<BR>[Called By]<UL><LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SysTick_Handler
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
 </UL>
@@ -414,9 +406,6 @@ Global Symbols
 <P><STRONG><a name="[18]"></a>TIMER1_IRQHandler</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
 <BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
 </UL>
-<P><STRONG><a name="[19]"></a>TIMER2_IRQHandler</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
-<BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
-</UL>
 <P><STRONG><a name="[1a]"></a>TIMER5_DAC0_1_IRQHandler</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
 <BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
 </UL>
@@ -432,82 +421,29 @@ Global Symbols
 <P><STRONG><a name="[a]"></a>WWDGT_IRQHandler</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
 <BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
 </UL>
-<P><STRONG><a name="[58]"></a>__user_initial_stackheap</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
+<P><STRONG><a name="[53]"></a>__user_initial_stackheap</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, startup_gd32e511_512.o(.text))
 <BR><BR>[Called By]<UL><LI><a href="#[48]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__user_setup_stackheap
 </UL>
 
-<P><STRONG><a name="[5b]"></a>__aeabi_memcpy</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, rt_memcpy_v6.o(.text))
-<BR><BR>[Called By]<UL><LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmBscMemoryTransfer
-<LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;write_bus
-</UL>
+<P><STRONG><a name="[e3]"></a>__use_two_region_memory</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, heapauxi.o(.text), UNUSED)
 
-<P><STRONG><a name="[52]"></a>__rt_memcpy</STRONG> (Thumb, 138 bytes, Stack size 0 bytes, rt_memcpy_v6.o(.text), UNUSED)
-<BR><BR>[Calls]<UL><LI><a href="#[53]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy4
-</UL>
+<P><STRONG><a name="[e4]"></a>__rt_heap_escrow</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, heapauxi.o(.text), UNUSED)
 
-<P><STRONG><a name="[c8]"></a>_memcpy_lastbytes</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memcpy_v6.o(.text), UNUSED)
+<P><STRONG><a name="[e5]"></a>__rt_heap_expand</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, heapauxi.o(.text), UNUSED)
 
-<P><STRONG><a name="[53]"></a>__aeabi_memcpy4</STRONG> (Thumb, 0 bytes, Stack size 8 bytes, rt_memcpy_w.o(.text), UNUSED)
-<BR><BR>[Called By]<UL><LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_memcpy
-</UL>
+<P><STRONG><a name="[e6]"></a>__user_libspace</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, libspace.o(.text), UNUSED)
 
-<P><STRONG><a name="[c9]"></a>__aeabi_memcpy8</STRONG> (Thumb, 0 bytes, Stack size 8 bytes, rt_memcpy_w.o(.text), UNUSED)
-
-<P><STRONG><a name="[ca]"></a>__rt_memcpy_w</STRONG> (Thumb, 100 bytes, Stack size 8 bytes, rt_memcpy_w.o(.text), UNUSED)
-
-<P><STRONG><a name="[cb]"></a>_memcpy_lastbytes_aligned</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memcpy_w.o(.text), UNUSED)
-
-<P><STRONG><a name="[54]"></a>__aeabi_memset</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, aeabi_memset.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = __aeabi_memset &rArr; _memset &rArr; _memset_w
-</UL>
-<BR>[Calls]<UL><LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_memset
-</UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-</UL>
-
-<P><STRONG><a name="[cc]"></a>__aeabi_memclr4</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memclr_w.o(.text), UNUSED)
-
-<P><STRONG><a name="[cd]"></a>__aeabi_memclr8</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memclr_w.o(.text), UNUSED)
-
-<P><STRONG><a name="[ce]"></a>__rt_memclr_w</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memclr_w.o(.text), UNUSED)
-
-<P><STRONG><a name="[56]"></a>_memset_w</STRONG> (Thumb, 74 bytes, Stack size 4 bytes, rt_memclr_w.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = _memset_w
-</UL>
-<BR>[Called By]<UL><LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_memset
-</UL>
-
-<P><STRONG><a name="[cf]"></a>__use_two_region_memory</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, heapauxi.o(.text), UNUSED)
-
-<P><STRONG><a name="[d0]"></a>__rt_heap_escrow</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, heapauxi.o(.text), UNUSED)
-
-<P><STRONG><a name="[d1]"></a>__rt_heap_expand</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, heapauxi.o(.text), UNUSED)
-
-<P><STRONG><a name="[d2]"></a>__aeabi_memclr</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memclr.o(.text), UNUSED)
-
-<P><STRONG><a name="[d3]"></a>__rt_memclr</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memclr.o(.text), UNUSED)
-
-<P><STRONG><a name="[55]"></a>_memset</STRONG> (Thumb, 64 bytes, Stack size 0 bytes, rt_memclr.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = _memset &rArr; _memset_w
-</UL>
-<BR>[Calls]<UL><LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_memset_w
-</UL>
-<BR>[Called By]<UL><LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memset
-</UL>
-
-<P><STRONG><a name="[d4]"></a>__user_libspace</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, libspace.o(.text), UNUSED)
-
-<P><STRONG><a name="[57]"></a>__user_perproc_libspace</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, libspace.o(.text))
+<P><STRONG><a name="[52]"></a>__user_perproc_libspace</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, libspace.o(.text))
 <BR><BR>[Called By]<UL><LI><a href="#[48]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__user_setup_stackheap
 </UL>
 
-<P><STRONG><a name="[d5]"></a>__user_perthread_libspace</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, libspace.o(.text), UNUSED)
+<P><STRONG><a name="[e7]"></a>__user_perthread_libspace</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, libspace.o(.text), UNUSED)
 
 <P><STRONG><a name="[48]"></a>__user_setup_stackheap</STRONG> (Thumb, 74 bytes, Stack size 8 bytes, sys_stackheap_outer.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = __user_setup_stackheap
 </UL>
-<BR>[Calls]<UL><LI><a href="#[58]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__user_initial_stackheap
-<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__user_perproc_libspace
+<BR>[Calls]<UL><LI><a href="#[53]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__user_initial_stackheap
+<LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__user_perproc_libspace
 </UL>
 <BR>[Called By]<UL><LI><a href="#[47]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry_sh
 </UL>
@@ -516,7 +452,7 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 8 + Unknown Stack Size
 <LI>Call Chain = exit
 </UL>
-<BR>[Calls]<UL><LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_exit
+<BR>[Calls]<UL><LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_exit
 </UL>
 <BR>[Called By]<UL><LI><a href="#[4b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry_main
 </UL>
@@ -525,124 +461,254 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[50]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_exit_exit
 </UL>
 
-<P><STRONG><a name="[d6]"></a>__I$use$semihosting</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, use_no_semi.o(.text), UNUSED)
+<P><STRONG><a name="[e8]"></a>__I$use$semihosting</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, use_no_semi.o(.text), UNUSED)
 
-<P><STRONG><a name="[d7]"></a>__use_no_semihosting_swi</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, use_no_semi.o(.text), UNUSED)
+<P><STRONG><a name="[e9]"></a>__use_no_semihosting_swi</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, use_no_semi.o(.text), UNUSED)
 
-<P><STRONG><a name="[d8]"></a>__semihosting_library_function</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, indicate_semi.o(.text), UNUSED)
+<P><STRONG><a name="[ea]"></a>__semihosting_library_function</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, indicate_semi.o(.text), UNUSED)
 
-<P><STRONG><a name="[62]"></a>BcmArmSetBus</STRONG> (Thumb, 106 bytes, Stack size 8 bytes, bcm_arm_platform.o(.text.BcmArmSetBus))
-<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = BcmArmSetBus
-</UL>
-<BR>[Called By]<UL><LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
-</UL>
-
-<P><STRONG><a name="[40]"></a>BcmBscMemoryTransfer</STRONG> (Thumb, 396 bytes, Stack size 304 bytes, bcm_bsc.o(.text.BcmBscMemoryTransfer))
-<BR><BR>[Stack]<UL><LI>Max Depth = 412<LI>Call Chain = BcmBscMemoryTransfer &rArr; BcmGd32I2cTransfer &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
-</UL>
-<BR>[Calls]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
-</UL>
-<BR>[Address Reference Count : 1]<UL><LI> bcm_gd32_i2c.o(.data.memory_transfer)
-</UL>
-<P><STRONG><a name="[5c]"></a>BcmGd32I2cInit</STRONG> (Thumb, 110 bytes, Stack size 32 bytes, bcm_gd32_i2c.o(.text.BcmGd32I2cInit))
-<BR><BR>[Stack]<UL><LI>Max Depth = 84<LI>Call Chain = BcmGd32I2cInit &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
-</UL>
-<BR>[Calls]<UL><LI><a href="#[5e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_af_set
-<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
-<LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
-<LI><a href="#[5d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
-<LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
-<LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmArmSetBus
-</UL>
-<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
-</UL>
-
-<P><STRONG><a name="[5a]"></a>BcmGd32I2cTransfer</STRONG> (Thumb, 582 bytes, Stack size 56 bytes, bcm_gd32_i2c.o(.text.BcmGd32I2cTransfer))
-<BR><BR>[Stack]<UL><LI>Max Depth = 108<LI>Call Chain = BcmGd32I2cTransfer &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
-</UL>
-<BR>[Calls]<UL><LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_clear
-<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_get
-<LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_transfer_byte_number_config
-<LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_reload_disable
-<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_data_receive
-<LI><a href="#[6b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_data_transmit
-<LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_stop_on_bus
-<LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_start_on_bus
-<LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_automatic_end_disable
-<LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_automatic_end_enable
-<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_master_addressing
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memset
-<LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
-<LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;wait_flag
-</UL>
-<BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusTransfer
-<LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmBscMemoryTransfer
-<LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;write_bus
-<LI><a href="#[36]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;read_bus
-</UL>
-
-<P><STRONG><a name="[70]"></a>GetAdcInfo</STRONG> (Thumb, 52 bytes, Stack size 8 bytes, adcresource_impl.o(.text.GetAdcInfo))
+<P><STRONG><a name="[55]"></a>GetAdcInfo</STRONG> (Thumb, 48 bytes, Stack size 8 bytes, adcresource_impl.o(.text.GetAdcInfo))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = GetAdcInfo
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 <LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
-<LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitAdc
+<LI><a href="#[7e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitAdc
 </UL>
 
-<P><STRONG><a name="[8d]"></a>GetBoardOps</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, boardresource_impl.o(.text.GetBoardOps))
-<BR><BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBoardResources
+<P><STRONG><a name="[a2]"></a>GetBoardOps</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, boardresource_impl.o(.text.GetBoardOps))
+<BR><BR>[Called By]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBoardResources
 </UL>
 
-<P><STRONG><a name="[8e]"></a>GetBusInfo</STRONG> (Thumb, 52 bytes, Stack size 8 bytes, busresource_impl.o(.text.GetBusInfo))
+<P><STRONG><a name="[6b]"></a>GetBusInfo</STRONG> (Thumb, 52 bytes, Stack size 8 bytes, busresource_impl.o(.text.GetBusInfo))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = GetBusInfo
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBus
+<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+<LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBus
 </UL>
 
-<P><STRONG><a name="[85]"></a>GetGpioInfo</STRONG> (Thumb, 52 bytes, Stack size 8 bytes, gpioresource_impl.o(.text.GetGpioInfo))
+<P><STRONG><a name="[79]"></a>GetGpioInfo</STRONG> (Thumb, 52 bytes, Stack size 8 bytes, gpioresource_impl.o(.text.GetGpioInfo))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = GetGpioInfo
 </UL>
-<BR>[Called By]<UL><LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioInit
-<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioRead
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioWrite
-<LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitGpio
+<BR>[Called By]<UL><LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioInit
+<LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioRead
+<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioWrite
+<LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitGpio
+<LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WriteGpio
 </UL>
 
-<P><STRONG><a name="[89]"></a>InitAdc</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, adcresource.o(.text.InitAdc))
+<P><STRONG><a name="[6d]"></a>I2cBusInit</STRONG> (Thumb, 134 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cBusInit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 84<LI>Call Chain = I2cBusInit &rArr; I2cHardwareConfig &rArr; i2c_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_af_set
+<LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
+<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
+<LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
+<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cRcuClock
+<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+</UL>
+
+<P><STRONG><a name="[72]"></a>I2cBusRead</STRONG> (Thumb, 342 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cBusRead))
+<BR><BR>[Stack]<UL><LI>Max Depth = 84<LI>Call Chain = I2cBusRead &rArr; I2cHardwareConfig &rArr; i2c_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_clear
+<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_get
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_transfer_byte_number_config
+<LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_reload_disable
+<LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_data_receive
+<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_stop_on_bus
+<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_start_on_bus
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_automatic_end_enable
+<LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_master_addressing
+<LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cWaitFlag
+<LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cPeriph
+<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusRead
+</UL>
+
+<P><STRONG><a name="[6c]"></a>I2cBusSoftwareInit</STRONG> (Thumb, 118 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cBusSoftwareInit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = I2cBusSoftwareInit &rArr; I2cSoftwareSclHigh &rArr; gpio_input_bit_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
+<LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
+<LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
+<LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
+<LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+</UL>
+
+<P><STRONG><a name="[71]"></a>I2cBusSoftwareRead</STRONG> (Thumb, 262 bytes, Stack size 40 bytes, mcu_i2c.o(.text.I2cBusSoftwareRead))
+<BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = I2cBusSoftwareRead &rArr; I2cSoftwareReceiveByte &rArr; I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
+<LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareReceiveByte
+<LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStop
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusRead
+</UL>
+
+<P><STRONG><a name="[75]"></a>I2cBusSoftwareWrite</STRONG> (Thumb, 236 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cBusSoftwareWrite))
+<BR><BR>[Stack]<UL><LI>Max Depth = 100<LI>Call Chain = I2cBusSoftwareWrite &rArr; I2cSoftwareStop &rArr; I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
+<LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStop
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusWrite
+</UL>
+
+<P><STRONG><a name="[76]"></a>I2cBusWrite</STRONG> (Thumb, 314 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cBusWrite))
+<BR><BR>[Stack]<UL><LI>Max Depth = 84<LI>Call Chain = I2cBusWrite &rArr; I2cHardwareConfig &rArr; i2c_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_clear
+<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_get
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_transfer_byte_number_config
+<LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_reload_disable
+<LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_data_transmit
+<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_stop_on_bus
+<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_start_on_bus
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_automatic_end_enable
+<LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_master_addressing
+<LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cWaitFlag
+<LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cPeriph
+<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusWrite
+</UL>
+
+<P><STRONG><a name="[7e]"></a>InitAdc</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, adcresource.o(.text.InitAdc))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = InitAdc &rArr; GetAdcInfo
 </UL>
-<BR>[Calls]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetAdcInfo
+<BR>[Calls]<UL><LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetAdcInfo
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardInit
 </UL>
 
-<P><STRONG><a name="[8c]"></a>InitBoardResources</STRONG> (Thumb, 46 bytes, Stack size 16 bytes, boardresource.o(.text.InitBoardResources))
+<P><STRONG><a name="[a1]"></a>InitBoardResources</STRONG> (Thumb, 46 bytes, Stack size 16 bytes, boardresource.o(.text.InitBoardResources))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = InitBoardResources
 </UL>
-<BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetBoardOps
+<BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetBoardOps
 </UL>
 <BR>[Called By]<UL><LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[8a]"></a>InitBus</STRONG> (Thumb, 58 bytes, Stack size 24 bytes, busresource.o(.text.InitBus))
+<P><STRONG><a name="[7f]"></a>InitBus</STRONG> (Thumb, 58 bytes, Stack size 24 bytes, busresource.o(.text.InitBus))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = InitBus &rArr; GetBusInfo
 </UL>
-<BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetBusInfo
+<BR>[Calls]<UL><LI><a href="#[6b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetBusInfo
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardInit
 </UL>
 
-<P><STRONG><a name="[88]"></a>InitGpio</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, gpioresource.o(.text.InitGpio))
+<P><STRONG><a name="[7d]"></a>InitGpio</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, gpioresource.o(.text.InitGpio))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = InitGpio &rArr; GetGpioInfo
 </UL>
-<BR>[Calls]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
+<BR>[Calls]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardInit
 </UL>
 
-<P><STRONG><a name="[a1]"></a>SystemCoreClockUpdate</STRONG> (Thumb, 350 bytes, Stack size 52 bytes, system_gd32e511_512.o(.text.SystemCoreClockUpdate))
+<P><STRONG><a name="[66]"></a>McuClockDelayUs</STRONG> (Thumb, 48 bytes, Stack size 8 bytes, mcu_clock.o(.text.McuClockDelayUs))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = McuClockDelayUs
+</UL>
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
+<LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitCalibration
+<LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+<LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+<LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiWaitFlag
+<LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareReceiveByte
+<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclLow
+<LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStop
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
+<LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cWaitFlag
+</UL>
+
+<P><STRONG><a name="[70]"></a>SpiBusInit</STRONG> (Thumb, 144 bytes, Stack size 32 bytes, mcu_spi.o(.text.SpiBusInit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = SpiBusInit &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_af_set
+<LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
+<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
+<LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+<LI><a href="#[a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiRcuClock
+<LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+</UL>
+
+<P><STRONG><a name="[74]"></a>SpiBusRead</STRONG> (Thumb, 218 bytes, Stack size 32 bytes, mcu_spi.o(.text.SpiBusRead))
+<BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = SpiBusRead &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_data_receive
+<LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_data_transmit
+<LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiWaitFlag
+<LI><a href="#[a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiPeriph
+<LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusRead
+</UL>
+
+<P><STRONG><a name="[6f]"></a>SpiBusSoftwareInit</STRONG> (Thumb, 92 bytes, Stack size 32 bytes, mcu_spi.o(.text.SpiBusSoftwareInit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 60<LI>Call Chain = SpiBusSoftwareInit &rArr; gpio_mode_set
+</UL>
+<BR>[Calls]<UL><LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_reset
+<LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
+<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
+<LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<LI><a href="#[aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+</UL>
+
+<P><STRONG><a name="[73]"></a>SpiBusSoftwareRead</STRONG> (Thumb, 130 bytes, Stack size 40 bytes, mcu_spi.o(.text.SpiBusSoftwareRead))
+<BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = SpiBusSoftwareRead &rArr; SpiSoftwareTransferByte &rArr; gpio_input_bit_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusRead
+</UL>
+
+<P><STRONG><a name="[77]"></a>SpiBusSoftwareWrite</STRONG> (Thumb, 132 bytes, Stack size 40 bytes, mcu_spi.o(.text.SpiBusSoftwareWrite))
+<BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = SpiBusSoftwareWrite &rArr; SpiSoftwareTransferByte &rArr; gpio_input_bit_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusWrite
+</UL>
+
+<P><STRONG><a name="[78]"></a>SpiBusWrite</STRONG> (Thumb, 188 bytes, Stack size 32 bytes, mcu_spi.o(.text.SpiBusWrite))
+<BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = SpiBusWrite &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_data_receive
+<LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_data_transmit
+<LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiWaitFlag
+<LI><a href="#[a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiPeriph
+<LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusWrite
+</UL>
+
+<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, mcu_clock.o(.text.SysTick_Handler))
+<BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
+</UL>
+<P><STRONG><a name="[bd]"></a>SystemCoreClockUpdate</STRONG> (Thumb, 350 bytes, Stack size 52 bytes, system_gd32e511_512.o(.text.SystemCoreClockUpdate))
 <BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = SystemCoreClockUpdate
 </UL>
 <BR>[Called By]<UL><LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
@@ -651,614 +717,818 @@ Global Symbols
 <P><STRONG><a name="[34]"></a>SystemInit</STRONG> (Thumb, 404 bytes, Stack size 24 bytes, system_gd32e511_512.o(.text.SystemInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 60<LI>Call Chain = SystemInit &rArr; system_clock_config &rArr; system_clock_120m_irc8m
 </UL>
-<BR>[Calls]<UL><LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;nvic_vector_table_set
-<LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_clock_config
-<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_soft_delay_
+<BR>[Calls]<UL><LI><a href="#[b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;nvic_vector_table_set
+<LI><a href="#[b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_clock_config
+<LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_soft_delay_
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(.text)
 </UL>
-<P><STRONG><a name="[76]"></a>adc_channel_length_config</STRONG> (Thumb, 182 bytes, Stack size 16 bytes, gd32e511_512_adc.o(.text.adc_channel_length_config))
+<P><STRONG><a name="[19]"></a>TIMER2_IRQHandler</STRONG> (Thumb, 42 bytes, Stack size 8 bytes, timer2_scheduler.o(.text.TIMER2_IRQHandler))
+<BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = TIMER2_IRQHandler &rArr; timer_interrupt_flag_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;timer_interrupt_flag_clear
+<LI><a href="#[b4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;timer_interrupt_flag_get
+<LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Timer2SchedulerTickISR
+</UL>
+<BR>[Address Reference Count : 1]<UL><LI> startup_gd32e511_512.o(RESET)
+</UL>
+<P><STRONG><a name="[6a]"></a>Timer2SchedulerAdd</STRONG> (Thumb, 190 bytes, Stack size 64 bytes, timer2_scheduler.o(.text.Timer2SchedulerAdd))
+<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = Timer2SchedulerAdd
+</UL>
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+</UL>
+
+<P><STRONG><a name="[b6]"></a>Timer2SchedulerTickISR</STRONG> (Thumb, 194 bytes, Stack size 4 bytes, timer2_scheduler.o(.text.Timer2SchedulerTickISR))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = Timer2SchedulerTickISR
+</UL>
+<BR>[Called By]<UL><LI><a href="#[19]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIMER2_IRQHandler
+</UL>
+
+<P><STRONG><a name="[6e]"></a>WriteGpio</STRONG> (Thumb, 76 bytes, Stack size 24 bytes, gpioresource.o(.text.WriteGpio))
+<BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = WriteGpio &rArr; GetGpioInfo
+</UL>
+<BR>[Calls]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
+</UL>
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusRead
+<LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusWrite
+<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+</UL>
+
+<P><STRONG><a name="[61]"></a>adc_channel_length_config</STRONG> (Thumb, 182 bytes, Stack size 16 bytes, gd32e511_512_adc.o(.text.adc_channel_length_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = adc_channel_length_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[74]"></a>adc_data_alignment_config</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_data_alignment_config))
+<P><STRONG><a name="[5f]"></a>adc_data_alignment_config</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_data_alignment_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = adc_data_alignment_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[72]"></a>adc_deinit</STRONG> (Thumb, 82 bytes, Stack size 24 bytes, gd32e511_512_adc.o(.text.adc_deinit))
+<P><STRONG><a name="[59]"></a>adc_deinit</STRONG> (Thumb, 82 bytes, Stack size 24 bytes, gd32e511_512_adc.o(.text.adc_deinit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = adc_deinit &rArr; rcu_periph_reset_disable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_disable
-<LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_enable
+<BR>[Calls]<UL><LI><a href="#[ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_disable
+<LI><a href="#[b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_enable
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[7f]"></a>adc_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_adc.o(.text.adc_disable))
+<P><STRONG><a name="[b8]"></a>adc_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_adc.o(.text.adc_disable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = adc_disable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitCalibration
-<LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
+<BR>[Called By]<UL><LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitCalibration
 </UL>
 
-<P><STRONG><a name="[79]"></a>adc_enable</STRONG> (Thumb, 30 bytes, Stack size 4 bytes, gd32e511_512_adc.o(.text.adc_enable))
+<P><STRONG><a name="[68]"></a>adc_dma_mode_enable</STRONG> (Thumb, 64 bytes, Stack size 12 bytes, gd32e511_512_adc.o(.text.adc_dma_mode_enable))
+<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = adc_dma_mode_enable
+</UL>
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+</UL>
+
+<P><STRONG><a name="[65]"></a>adc_enable</STRONG> (Thumb, 30 bytes, Stack size 4 bytes, gd32e511_512_adc.o(.text.adc_enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = adc_enable
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[78]"></a>adc_external_trigger_config</STRONG> (Thumb, 122 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_external_trigger_config))
+<P><STRONG><a name="[64]"></a>adc_external_trigger_config</STRONG> (Thumb, 122 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_external_trigger_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = adc_external_trigger_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[77]"></a>adc_external_trigger_source_config</STRONG> (Thumb, 116 bytes, Stack size 16 bytes, gd32e511_512_adc.o(.text.adc_external_trigger_source_config))
+<P><STRONG><a name="[63]"></a>adc_external_trigger_source_config</STRONG> (Thumb, 116 bytes, Stack size 16 bytes, gd32e511_512_adc.o(.text.adc_external_trigger_source_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = adc_external_trigger_source_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[7c]"></a>adc_flag_clear</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_flag_clear))
-<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = adc_flag_clear
-</UL>
-<BR>[Called By]<UL><LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
-</UL>
-
-<P><STRONG><a name="[7e]"></a>adc_flag_get</STRONG> (Thumb, 40 bytes, Stack size 12 bytes, gd32e511_512_adc.o(.text.adc_flag_get))
-<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = adc_flag_get
-</UL>
-<BR>[Called By]<UL><LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
-</UL>
-
-<P><STRONG><a name="[73]"></a>adc_resolution_config</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_resolution_config))
+<P><STRONG><a name="[5e]"></a>adc_resolution_config</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_resolution_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = adc_resolution_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[7b]"></a>adc_routine_channel_config</STRONG> (Thumb, 688 bytes, Stack size 20 bytes, gd32e511_512_adc.o(.text.adc_routine_channel_config))
+<P><STRONG><a name="[62]"></a>adc_routine_channel_config</STRONG> (Thumb, 688 bytes, Stack size 20 bytes, gd32e511_512_adc.o(.text.adc_routine_channel_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = adc_routine_channel_config
 </UL>
-<BR>[Called By]<UL><LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[80]"></a>adc_routine_data_read</STRONG> (Thumb, 14 bytes, Stack size 4 bytes, gd32e511_512_adc.o(.text.adc_routine_data_read))
-<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = adc_routine_data_read
-</UL>
-<BR>[Called By]<UL><LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
-</UL>
-
-<P><STRONG><a name="[7d]"></a>adc_software_trigger_enable</STRONG> (Thumb, 58 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_software_trigger_enable))
+<P><STRONG><a name="[69]"></a>adc_software_trigger_enable</STRONG> (Thumb, 58 bytes, Stack size 8 bytes, gd32e511_512_adc.o(.text.adc_software_trigger_enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = adc_software_trigger_enable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[75]"></a>adc_special_function_config</STRONG> (Thumb, 168 bytes, Stack size 12 bytes, gd32e511_512_adc.o(.text.adc_special_function_config))
+<P><STRONG><a name="[60]"></a>adc_special_function_config</STRONG> (Thumb, 168 bytes, Stack size 12 bytes, gd32e511_512_adc.o(.text.adc_special_function_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = adc_special_function_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[6f]"></a>delay_us</STRONG> (Thumb, 172 bytes, Stack size 24 bytes, hr_time_arm.o(.text.delay_us))
-<BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = delay_us
+<P><STRONG><a name="[bb]"></a>dma_channel_disable</STRONG> (Thumb, 36 bytes, Stack size 4 bytes, gd32e511_512_dma.o(.text.dma_channel_disable))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = dma_channel_disable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclLow
-<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Stop
-<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveByte
-<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendByte
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Start
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitCalibration
-<LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
-<LI><a href="#[38]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcRead
-<LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;wait_flag
+<BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dma_init
 </UL>
 
-<P><STRONG><a name="[5e]"></a>gpio_af_set</STRONG> (Thumb, 220 bytes, Stack size 24 bytes, gd32e511_512_gpio.o(.text.gpio_af_set))
+<P><STRONG><a name="[5d]"></a>dma_channel_enable</STRONG> (Thumb, 36 bytes, Stack size 4 bytes, gd32e511_512_dma.o(.text.dma_channel_enable))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = dma_channel_enable
+</UL>
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+</UL>
+
+<P><STRONG><a name="[5c]"></a>dma_circulation_enable</STRONG> (Thumb, 36 bytes, Stack size 4 bytes, gd32e511_512_dma.o(.text.dma_circulation_enable))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = dma_circulation_enable
+</UL>
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+</UL>
+
+<P><STRONG><a name="[5b]"></a>dma_init</STRONG> (Thumb, 344 bytes, Stack size 24 bytes, gd32e511_512_dma.o(.text.dma_init))
+<BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = dma_init &rArr; dma_channel_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[bb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dma_channel_disable
+</UL>
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+</UL>
+
+<P><STRONG><a name="[5a]"></a>dma_struct_para_init</STRONG> (Thumb, 46 bytes, Stack size 4 bytes, gd32e511_512_dma.o(.text.dma_struct_para_init))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = dma_struct_para_init
+</UL>
+<BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
+</UL>
+
+<P><STRONG><a name="[84]"></a>gpio_af_set</STRONG> (Thumb, 220 bytes, Stack size 24 bytes, gd32e511_512_gpio.o(.text.gpio_af_set))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = gpio_af_set
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
+<BR>[Called By]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
 </UL>
 
-<P><STRONG><a name="[92]"></a>gpio_bit_reset</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, gd32e511_512_gpio.o(.text.gpio_bit_reset))
+<P><STRONG><a name="[a0]"></a>gpio_bit_reset</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, gd32e511_512_gpio.o(.text.gpio_bit_reset))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = gpio_bit_reset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclLow
+<BR>[Called By]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareInit
+<LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclLow
 </UL>
 
-<P><STRONG><a name="[81]"></a>gpio_bit_set</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, gd32e511_512_gpio.o(.text.gpio_bit_set))
+<P><STRONG><a name="[92]"></a>gpio_bit_set</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, gd32e511_512_gpio.o(.text.gpio_bit_set))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = gpio_bit_set
 </UL>
-<BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
+<BR>[Called By]<UL><LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareWrite
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
 </UL>
 
-<P><STRONG><a name="[87]"></a>gpio_bit_write</STRONG> (Thumb, 42 bytes, Stack size 12 bytes, gd32e511_512_gpio.o(.text.gpio_bit_write))
+<P><STRONG><a name="[7c]"></a>gpio_bit_write</STRONG> (Thumb, 42 bytes, Stack size 12 bytes, gd32e511_512_gpio.o(.text.gpio_bit_write))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = gpio_bit_write
 </UL>
-<BR>[Called By]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sda
-<LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioWrite
+<BR>[Called By]<UL><LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
+<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioWrite
+<LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
 </UL>
 
-<P><STRONG><a name="[83]"></a>gpio_input_bit_get</STRONG> (Thumb, 42 bytes, Stack size 12 bytes, gd32e511_512_gpio.o(.text.gpio_input_bit_get))
+<P><STRONG><a name="[7b]"></a>gpio_input_bit_get</STRONG> (Thumb, 42 bytes, Stack size 12 bytes, gd32e511_512_gpio.o(.text.gpio_input_bit_get))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = gpio_input_bit_get
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveByte
-<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendByte
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Start
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
-<LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioRead
+<BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioRead
+<LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiSoftwareTransferByte
+<LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareReceiveByte
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
 </UL>
 
-<P><STRONG><a name="[5f]"></a>gpio_mode_set</STRONG> (Thumb, 164 bytes, Stack size 28 bytes, gd32e511_512_gpio.o(.text.gpio_mode_set))
+<P><STRONG><a name="[57]"></a>gpio_mode_set</STRONG> (Thumb, 164 bytes, Stack size 28 bytes, gd32e511_512_gpio.o(.text.gpio_mode_set))
 <BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = gpio_mode_set
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
-<LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
+<BR>[Called By]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareInit
+<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
 <LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[60]"></a>gpio_output_options_set</STRONG> (Thumb, 162 bytes, Stack size 24 bytes, gd32e511_512_gpio.o(.text.gpio_output_options_set))
+<P><STRONG><a name="[81]"></a>gpio_output_options_set</STRONG> (Thumb, 162 bytes, Stack size 24 bytes, gd32e511_512_gpio.o(.text.gpio_output_options_set))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = gpio_output_options_set
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
-<LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
+<BR>[Called By]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareInit
+<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
 </UL>
 
-<P><STRONG><a name="[68]"></a>i2c_automatic_end_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_automatic_end_disable))
-<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_automatic_end_disable
-</UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-</UL>
-
-<P><STRONG><a name="[69]"></a>i2c_automatic_end_enable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_automatic_end_enable))
+<P><STRONG><a name="[8c]"></a>i2c_automatic_end_enable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_automatic_end_enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_automatic_end_enable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[6c]"></a>i2c_data_receive</STRONG> (Thumb, 14 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_data_receive))
+<P><STRONG><a name="[8e]"></a>i2c_data_receive</STRONG> (Thumb, 14 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_data_receive))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_data_receive
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
 </UL>
 
-<P><STRONG><a name="[6b]"></a>i2c_data_transmit</STRONG> (Thumb, 20 bytes, Stack size 8 bytes, gd32e511_512_i2c.o(.text.i2c_data_transmit))
+<P><STRONG><a name="[99]"></a>i2c_data_transmit</STRONG> (Thumb, 20 bytes, Stack size 8 bytes, gd32e511_512_i2c.o(.text.i2c_data_transmit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = i2c_data_transmit
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[9b]"></a>i2c_deinit</STRONG> (Thumb, 152 bytes, Stack size 32 bytes, gd32e511_512_i2c.o(.text.i2c_deinit))
-<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = i2c_deinit &rArr; i2c_disable
+<P><STRONG><a name="[9a]"></a>i2c_deinit</STRONG> (Thumb, 152 bytes, Stack size 32 bytes, gd32e511_512_i2c.o(.text.i2c_deinit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = i2c_deinit &rArr; rcu_periph_reset_disable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_disable
-<LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_disable
-<LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_enable
+<BR>[Calls]<UL><LI><a href="#[ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_disable
+<LI><a href="#[b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_enable
+<LI><a href="#[bc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_disable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
+<BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
 </UL>
 
-<P><STRONG><a name="[a0]"></a>i2c_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_disable))
+<P><STRONG><a name="[bc]"></a>i2c_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_disable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_disable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
+<BR>[Called By]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
 </UL>
 
-<P><STRONG><a name="[9f]"></a>i2c_enable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_enable))
+<P><STRONG><a name="[9e]"></a>i2c_enable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_enable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
+<BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
 </UL>
 
-<P><STRONG><a name="[64]"></a>i2c_flag_clear</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, gd32e511_512_i2c.o(.text.i2c_flag_clear))
+<P><STRONG><a name="[88]"></a>i2c_flag_clear</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, gd32e511_512_i2c.o(.text.i2c_flag_clear))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = i2c_flag_clear
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[6d]"></a>i2c_flag_get</STRONG> (Thumb, 44 bytes, Stack size 12 bytes, gd32e511_512_i2c.o(.text.i2c_flag_get))
+<P><STRONG><a name="[8f]"></a>i2c_flag_get</STRONG> (Thumb, 44 bytes, Stack size 12 bytes, gd32e511_512_i2c.o(.text.i2c_flag_get))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = i2c_flag_get
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;wait_flag
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
+<LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cWaitFlag
 </UL>
 
-<P><STRONG><a name="[66]"></a>i2c_master_addressing</STRONG> (Thumb, 62 bytes, Stack size 12 bytes, gd32e511_512_i2c.o(.text.i2c_master_addressing))
+<P><STRONG><a name="[8a]"></a>i2c_master_addressing</STRONG> (Thumb, 62 bytes, Stack size 12 bytes, gd32e511_512_i2c.o(.text.i2c_master_addressing))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = i2c_master_addressing
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[9e]"></a>i2c_master_clock_config</STRONG> (Thumb, 62 bytes, Stack size 12 bytes, gd32e511_512_i2c.o(.text.i2c_master_clock_config))
+<P><STRONG><a name="[9d]"></a>i2c_master_clock_config</STRONG> (Thumb, 62 bytes, Stack size 12 bytes, gd32e511_512_i2c.o(.text.i2c_master_clock_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = i2c_master_clock_config
 </UL>
-<BR>[Called By]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
+<BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
 </UL>
 
-<P><STRONG><a name="[65]"></a>i2c_reload_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_reload_disable))
+<P><STRONG><a name="[89]"></a>i2c_reload_disable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_reload_disable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_reload_disable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[6a]"></a>i2c_start_on_bus</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_start_on_bus))
+<P><STRONG><a name="[8d]"></a>i2c_start_on_bus</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_start_on_bus))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_start_on_bus
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[6e]"></a>i2c_stop_on_bus</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_stop_on_bus))
+<P><STRONG><a name="[90]"></a>i2c_stop_on_bus</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_i2c.o(.text.i2c_stop_on_bus))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = i2c_stop_on_bus
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
-<P><STRONG><a name="[9d]"></a>i2c_timing_config</STRONG> (Thumb, 94 bytes, Stack size 16 bytes, gd32e511_512_i2c.o(.text.i2c_timing_config))
+<P><STRONG><a name="[9c]"></a>i2c_timing_config</STRONG> (Thumb, 94 bytes, Stack size 16 bytes, gd32e511_512_i2c.o(.text.i2c_timing_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = i2c_timing_config
 </UL>
-<BR>[Called By]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
+<BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
 </UL>
 
-<P><STRONG><a name="[67]"></a>i2c_transfer_byte_number_config</STRONG> (Thumb, 36 bytes, Stack size 8 bytes, gd32e511_512_i2c.o(.text.i2c_transfer_byte_number_config))
+<P><STRONG><a name="[8b]"></a>i2c_transfer_byte_number_config</STRONG> (Thumb, 36 bytes, Stack size 8 bytes, gd32e511_512_i2c.o(.text.i2c_transfer_byte_number_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = i2c_transfer_byte_number_config
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
 </UL>
 
 <P><STRONG><a name="[4c]"></a>main</STRONG> (Thumb, 30 bytes, Stack size 16 bytes, main.o(.text.main))
 <BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = main &rArr; SystemCoreClockUpdate
 </UL>
-<BR>[Calls]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBoardResources
-<LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemCoreClockUpdate
+<BR>[Calls]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBoardResources
+<LI><a href="#[bd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemCoreClockUpdate
 </UL>
 <BR>[Called By]<UL><LI><a href="#[4b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_entry_main
 </UL>
 
-<P><STRONG><a name="[98]"></a>nvic_vector_table_set</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, gd32e511_512_misc.o(.text.nvic_vector_table_set))
+<P><STRONG><a name="[b3]"></a>nvic_vector_table_set</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, gd32e511_512_misc.o(.text.nvic_vector_table_set))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = nvic_vector_table_set
 </UL>
 <BR>[Called By]<UL><LI><a href="#[34]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemInit
 </UL>
 
-<P><STRONG><a name="[71]"></a>rcu_adc_clock_config</STRONG> (Thumb, 1014 bytes, Stack size 20 bytes, gd32e511_512_rcu.o(.text.rcu_adc_clock_config))
+<P><STRONG><a name="[58]"></a>rcu_adc_clock_config</STRONG> (Thumb, 1014 bytes, Stack size 20 bytes, gd32e511_512_rcu.o(.text.rcu_adc_clock_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = rcu_adc_clock_config
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[9c]"></a>rcu_i2c_clock_config</STRONG> (Thumb, 156 bytes, Stack size 12 bytes, gd32e511_512_rcu.o(.text.rcu_i2c_clock_config))
+<P><STRONG><a name="[9b]"></a>rcu_i2c_clock_config</STRONG> (Thumb, 156 bytes, Stack size 12 bytes, gd32e511_512_rcu.o(.text.rcu_i2c_clock_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = rcu_i2c_clock_config
 </UL>
-<BR>[Called By]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;configure
+<BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
 </UL>
 
-<P><STRONG><a name="[5d]"></a>rcu_periph_clock_enable</STRONG> (Thumb, 40 bytes, Stack size 4 bytes, gd32e511_512_rcu.o(.text.rcu_periph_clock_enable))
+<P><STRONG><a name="[56]"></a>rcu_periph_clock_enable</STRONG> (Thumb, 40 bytes, Stack size 4 bytes, gd32e511_512_rcu.o(.text.rcu_periph_clock_enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = rcu_periph_clock_enable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnablePort
+<BR>[Called By]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareInit
+<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnablePort
 <LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[9a]"></a>rcu_periph_reset_disable</STRONG> (Thumb, 40 bytes, Stack size 4 bytes, gd32e511_512_rcu.o(.text.rcu_periph_reset_disable))
+<P><STRONG><a name="[ba]"></a>rcu_periph_reset_disable</STRONG> (Thumb, 40 bytes, Stack size 4 bytes, gd32e511_512_rcu.o(.text.rcu_periph_reset_disable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = rcu_periph_reset_disable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
-<LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_deinit
+<BR>[Called By]<UL><LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_deinit
+<LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_deinit
+<LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
 </UL>
 
-<P><STRONG><a name="[99]"></a>rcu_periph_reset_enable</STRONG> (Thumb, 40 bytes, Stack size 4 bytes, gd32e511_512_rcu.o(.text.rcu_periph_reset_enable))
+<P><STRONG><a name="[b9]"></a>rcu_periph_reset_enable</STRONG> (Thumb, 40 bytes, Stack size 4 bytes, gd32e511_512_rcu.o(.text.rcu_periph_reset_enable))
 <BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = rcu_periph_reset_enable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
-<LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_deinit
+<BR>[Called By]<UL><LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_deinit
+<LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_deinit
+<LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
+</UL>
+
+<P><STRONG><a name="[a9]"></a>spi_data_receive</STRONG> (Thumb, 104 bytes, Stack size 16 bytes, gd32e511_512_spi.o(.text.spi_data_receive))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = spi_data_receive
+</UL>
+<BR>[Called By]<UL><LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusRead
+<LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusWrite
+</UL>
+
+<P><STRONG><a name="[a8]"></a>spi_data_transmit</STRONG> (Thumb, 98 bytes, Stack size 16 bytes, gd32e511_512_spi.o(.text.spi_data_transmit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = spi_data_transmit
+</UL>
+<BR>[Called By]<UL><LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusRead
+<LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusWrite
+</UL>
+
+<P><STRONG><a name="[ac]"></a>spi_deinit</STRONG> (Thumb, 144 bytes, Stack size 32 bytes, gd32e511_512_spi.o(.text.spi_deinit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = spi_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_disable
+<LI><a href="#[b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_reset_enable
+</UL>
+<BR>[Called By]<UL><LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+
+<P><STRONG><a name="[af]"></a>spi_enable</STRONG> (Thumb, 18 bytes, Stack size 4 bytes, gd32e511_512_spi.o(.text.spi_enable))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = spi_enable
+</UL>
+<BR>[Called By]<UL><LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+
+<P><STRONG><a name="[b0]"></a>spi_flag_get</STRONG> (Thumb, 220 bytes, Stack size 20 bytes, gd32e511_512_spi.o(.text.spi_flag_get))
+<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = spi_flag_get
+</UL>
+<BR>[Called By]<UL><LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiWaitFlag
+</UL>
+
+<P><STRONG><a name="[ae]"></a>spi_init</STRONG> (Thumb, 348 bytes, Stack size 24 bytes, gd32e511_512_spi.o(.text.spi_init))
+<BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = spi_init
+</UL>
+<BR>[Called By]<UL><LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+
+<P><STRONG><a name="[ad]"></a>spi_struct_para_init</STRONG> (Thumb, 42 bytes, Stack size 4 bytes, gd32e511_512_spi.o(.text.spi_struct_para_init))
+<BR><BR>[Stack]<UL><LI>Max Depth = 4<LI>Call Chain = spi_struct_para_init
+</UL>
+<BR>[Called By]<UL><LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+
+<P><STRONG><a name="[b5]"></a>timer_interrupt_flag_clear</STRONG> (Thumb, 24 bytes, Stack size 8 bytes, gd32e511_512_timer.o(.text.timer_interrupt_flag_clear))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = timer_interrupt_flag_clear
+</UL>
+<BR>[Called By]<UL><LI><a href="#[19]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIMER2_IRQHandler
+</UL>
+
+<P><STRONG><a name="[b4]"></a>timer_interrupt_flag_get</STRONG> (Thumb, 72 bytes, Stack size 24 bytes, gd32e511_512_timer.o(.text.timer_interrupt_flag_get))
+<BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = timer_interrupt_flag_get
+</UL>
+<BR>[Called By]<UL><LI><a href="#[19]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIMER2_IRQHandler
 </UL>
 
 <P><STRONG><a name="[46]"></a>_fp_init</STRONG> (Thumb, 26 bytes, Stack size 0 bytes, fpinit.o(x$fpl$fpinit))
 <BR><BR>[Called By]<UL><LI><a href="#[45]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_lib_init_fp_1
 </UL>
 
-<P><STRONG><a name="[d9]"></a>__fplib_config_fpu_vfp</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, fpinit.o(x$fpl$fpinit), UNUSED)
+<P><STRONG><a name="[eb]"></a>__fplib_config_fpu_vfp</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, fpinit.o(x$fpl$fpinit), UNUSED)
 
-<P><STRONG><a name="[da]"></a>__fplib_config_pureend_doubles</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, fpinit.o(x$fpl$fpinit), UNUSED)
+<P><STRONG><a name="[ec]"></a>__fplib_config_pureend_doubles</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, fpinit.o(x$fpl$fpinit), UNUSED)
 <P>
 <H3>
 Local Symbols
 </H3>
-<P><STRONG><a name="[38]"></a>BoardAdcRead</STRONG> (Thumb, 214 bytes, Stack size 32 bytes, adcresource_impl.o(.text.BoardAdcRead))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = BoardAdcRead &rArr; delay_us
+<P><STRONG><a name="[38]"></a>BoardAdcRead</STRONG> (Thumb, 110 bytes, Stack size 24 bytes, adcresource_impl.o(.text.BoardAdcRead))
+<BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = BoardAdcRead &rArr; GetAdcInfo
 </UL>
-<BR>[Calls]<UL><LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_routine_data_read
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-<LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_disable
-<LI><a href="#[7e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_flag_get
-<LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_software_trigger_enable
-<LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_flag_clear
-<LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_routine_channel_config
-<LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetAdcInfo
+<BR>[Calls]<UL><LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetAdcInfo
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> adcresource_impl.o(.rodata.g_AdcInfoImpl)
 </UL>
-<P><STRONG><a name="[39]"></a>BoardAdcInit</STRONG> (Thumb, 300 bytes, Stack size 32 bytes, adcresource_impl.o(.text.BoardAdcInit))
-<BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = BoardAdcInit &rArr; WaitCalibration &rArr; delay_us
+<P><STRONG><a name="[39]"></a>BoardAdcInit</STRONG> (Thumb, 594 bytes, Stack size 104 bytes, adcresource_impl.o(.text.BoardAdcInit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = BoardAdcInit &rArr; Timer2SchedulerAdd
 </UL>
-<BR>[Calls]<UL><LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_enable
-<LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_external_trigger_config
-<LI><a href="#[77]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_external_trigger_source_config
-<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_channel_length_config
-<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_special_function_config
-<LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_data_alignment_config
-<LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_resolution_config
-<LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_deinit
-<LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_adc_clock_config
-<LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
-<LI><a href="#[5d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-<LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitCalibration
-<LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetAdcInfo
+<BR>[Calls]<UL><LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Timer2SchedulerAdd
+<LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_software_trigger_enable
+<LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_dma_mode_enable
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_enable
+<LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_external_trigger_config
+<LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_external_trigger_source_config
+<LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_routine_channel_config
+<LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_channel_length_config
+<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_special_function_config
+<LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_data_alignment_config
+<LI><a href="#[5e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_resolution_config
+<LI><a href="#[5d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dma_channel_enable
+<LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dma_circulation_enable
+<LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dma_init
+<LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dma_struct_para_init
+<LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_deinit
+<LI><a href="#[58]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_adc_clock_config
+<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
+<LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitCalibration
+<LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetAdcInfo
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> adcresource_impl.o(.rodata.g_AdcInfoImpl)
 </UL>
-<P><STRONG><a name="[7a]"></a>WaitCalibration</STRONG> (Thumb, 80 bytes, Stack size 24 bytes, adcresource_impl.o(.text.WaitCalibration))
-<BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = WaitCalibration &rArr; delay_us
+<P><STRONG><a name="[67]"></a>WaitCalibration</STRONG> (Thumb, 80 bytes, Stack size 24 bytes, adcresource_impl.o(.text.WaitCalibration))
+<BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = WaitCalibration &rArr; McuClockDelayUs
 </UL>
-<BR>[Calls]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-<LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_disable
+<BR>[Calls]<UL><LI><a href="#[b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;adc_disable
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
 </UL>
 <BR>[Called By]<UL><LI><a href="#[39]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardAdcInit
 </UL>
 
-<P><STRONG><a name="[3d]"></a>BoardGpioWrite</STRONG> (Thumb, 98 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.BoardGpioWrite))
+<P><STRONG><a name="[36]"></a>TaskBaseAdSamples</STRONG> (Thumb, 66 bytes, Stack size 16 bytes, adcresource_impl.o(.text.TaskBaseAdSamples))
+<BR><BR>[Stack]<UL><LI>Max Depth = 44<LI>Call Chain = TaskBaseAdSamples &rArr; AdSampleMedianMeanFilter
+</UL>
+<BR>[Calls]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AdSampleMedianMeanFilter
+</UL>
+<BR>[Address Reference Count : 1]<UL><LI> adcresource_impl.o(.text.BoardAdcInit)
+</UL>
+<P><STRONG><a name="[37]"></a>TaskRssiAdSamples</STRONG> (Thumb, 38 bytes, Stack size 16 bytes, adcresource_impl.o(.text.TaskRssiAdSamples))
+<BR><BR>[Stack]<UL><LI>Max Depth = 44<LI>Call Chain = TaskRssiAdSamples &rArr; AdSampleMedianMeanFilter
+</UL>
+<BR>[Calls]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AdSampleMedianMeanFilter
+</UL>
+<BR>[Address Reference Count : 1]<UL><LI> adcresource_impl.o(.text.BoardAdcInit)
+</UL>
+<P><STRONG><a name="[b7]"></a>AdSampleMedianMeanFilter</STRONG> (Thumb, 300 bytes, Stack size 28 bytes, adcresource_impl.o(.text.AdSampleMedianMeanFilter))
+<BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = AdSampleMedianMeanFilter
+</UL>
+<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TaskRssiAdSamples
+<LI><a href="#[36]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TaskBaseAdSamples
+</UL>
+
+<P><STRONG><a name="[3e]"></a>BoardGpioWrite</STRONG> (Thumb, 98 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.BoardGpioWrite))
 <BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = BoardGpioWrite &rArr; gpio_bit_write
 </UL>
-<BR>[Calls]<UL><LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
-<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
+<BR>[Calls]<UL><LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> gpioresource_impl.o(.rodata.g_GpioInfoImpl)
 </UL>
-<P><STRONG><a name="[3e]"></a>BoardGpioRead</STRONG> (Thumb, 92 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.BoardGpioRead))
+<P><STRONG><a name="[3f]"></a>BoardGpioRead</STRONG> (Thumb, 92 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.BoardGpioRead))
 <BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = BoardGpioRead &rArr; gpio_input_bit_get
 </UL>
-<BR>[Calls]<UL><LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
-<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
+<BR>[Calls]<UL><LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> gpioresource_impl.o(.rodata.g_GpioInfoImpl)
 </UL>
-<P><STRONG><a name="[3f]"></a>BoardGpioInit</STRONG> (Thumb, 68 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.BoardGpioInit))
+<P><STRONG><a name="[40]"></a>BoardGpioInit</STRONG> (Thumb, 68 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.BoardGpioInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 76<LI>Call Chain = BoardGpioInit &rArr; ConfigurePin &rArr; gpio_mode_set
 </UL>
-<BR>[Calls]<UL><LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
-<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
+<BR>[Calls]<UL><LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
+<LI><a href="#[79]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetGpioInfo
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> gpioresource_impl.o(.rodata.g_GpioInfoImpl)
 </UL>
-<P><STRONG><a name="[86]"></a>ConfigurePin</STRONG> (Thumb, 96 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.ConfigurePin))
+<P><STRONG><a name="[7a]"></a>ConfigurePin</STRONG> (Thumb, 96 bytes, Stack size 24 bytes, gpioresource_impl.o(.text.ConfigurePin))
 <BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = ConfigurePin &rArr; gpio_mode_set
 </UL>
-<BR>[Calls]<UL><LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
-<LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnablePort
-<LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
+<BR>[Calls]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
+<LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
+<LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnablePort
+<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
 </UL>
-<BR>[Called By]<UL><LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioInit
+<BR>[Called By]<UL><LI><a href="#[40]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardGpioInit
 </UL>
 
-<P><STRONG><a name="[8b]"></a>EnablePort</STRONG> (Thumb, 138 bytes, Stack size 16 bytes, gpioresource_impl.o(.text.EnablePort))
+<P><STRONG><a name="[80]"></a>EnablePort</STRONG> (Thumb, 138 bytes, Stack size 16 bytes, gpioresource_impl.o(.text.EnablePort))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = EnablePort &rArr; rcu_periph_clock_enable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[5d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<BR>[Calls]<UL><LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
 </UL>
-<BR>[Called By]<UL><LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
+<BR>[Called By]<UL><LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ConfigurePin
 </UL>
 
-<P><STRONG><a name="[3b]"></a>BoardBusInit</STRONG> (Thumb, 202 bytes, Stack size 32 bytes, busresource_impl.o(.text.BoardBusInit))
-<BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = BoardBusInit &rArr; BcmGd32I2cInit &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
+<P><STRONG><a name="[3b]"></a>BoardBusInit</STRONG> (Thumb, 248 bytes, Stack size 40 bytes, busresource_impl.o(.text.BoardBusInit))
+<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = BoardBusInit &rArr; SpiBusInit &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
-<LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_output_options_set
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
-<LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_mode_set
-<LI><a href="#[5d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_periph_clock_enable
+<BR>[Calls]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareInit
+<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[6b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GetBusInfo
+<LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WriteGpio
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> busresource_impl.o(.rodata.g_BusInfo)
 </UL>
-<P><STRONG><a name="[82]"></a>SclHigh</STRONG> (Thumb, 90 bytes, Stack size 16 bytes, busresource_impl.o(.text.SclHigh))
-<BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = SclHigh &rArr; delay_us
+<P><STRONG><a name="[3c]"></a>BoardBusWrite</STRONG> (Thumb, 266 bytes, Stack size 56 bytes, busresource_impl.o(.text.BoardBusWrite))
+<BR><BR>[Stack]<UL><LI>Max Depth = 172<LI>Call Chain = BoardBusWrite &rArr; SpiBusWrite &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Stop
-<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveByte
-<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendByte
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Start
-<LI><a href="#[3b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusInit
-</UL>
-
-<P><STRONG><a name="[3c]"></a>BoardBusTransfer</STRONG> (Thumb, 228 bytes, Stack size 32 bytes, busresource_impl.o(.text.BoardBusTransfer))
-<BR><BR>[Stack]<UL><LI>Max Depth = 144<LI>Call Chain = BoardBusTransfer &rArr; SoftwareI2cTransfer &rArr; ReceiveByte &rArr; SclHigh &rArr; delay_us
-</UL>
-<BR>[Calls]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
+<BR>[Calls]<UL><LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusWrite
+<LI><a href="#[77]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareWrite
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
+<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareWrite
+<LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WriteGpio
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> busresource_impl.o(.rodata.g_BusInfo)
 </UL>
-<P><STRONG><a name="[84]"></a>SoftwareI2cTransfer</STRONG> (Thumb, 288 bytes, Stack size 40 bytes, busresource_impl.o(.text.SoftwareI2cTransfer))
-<BR><BR>[Stack]<UL><LI>Max Depth = 112<LI>Call Chain = SoftwareI2cTransfer &rArr; ReceiveByte &rArr; SclHigh &rArr; delay_us
+<P><STRONG><a name="[3d]"></a>BoardBusRead</STRONG> (Thumb, 266 bytes, Stack size 56 bytes, busresource_impl.o(.text.BoardBusRead))
+<BR><BR>[Stack]<UL><LI>Max Depth = 172<LI>Call Chain = BoardBusRead &rArr; SpiBusRead &rArr; SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
-<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Stop
-<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveByte
-<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendByte
-<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sda
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Start
+<BR>[Calls]<UL><LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusRead
+<LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareRead
+<LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+<LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WriteGpio
 </UL>
-<BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BoardBusTransfer
+<BR>[Address Reference Count : 1]<UL><LI> busresource_impl.o(.rodata.g_BusInfo)
 </UL>
-
-<P><STRONG><a name="[94]"></a>Start</STRONG> (Thumb, 80 bytes, Stack size 16 bytes, busresource_impl.o(.text.Start))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = Start &rArr; SclHigh &rArr; delay_us
-</UL>
-<BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclLow
-<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sda
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
-</UL>
-
-<P><STRONG><a name="[90]"></a>Sda</STRONG> (Thumb, 36 bytes, Stack size 16 bytes, busresource_impl.o(.text.Sda))
-<BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = Sda &rArr; gpio_bit_write
-</UL>
-<BR>[Calls]<UL><LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
-</UL>
-<BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Stop
-<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveByte
-<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendByte
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Start
-<LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
-</UL>
-
-<P><STRONG><a name="[93]"></a>SendByte</STRONG> (Thumb, 150 bytes, Stack size 24 bytes, busresource_impl.o(.text.SendByte))
-<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = SendByte &rArr; SclHigh &rArr; delay_us
-</UL>
-<BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclLow
-<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sda
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
-</UL>
-
-<P><STRONG><a name="[8f]"></a>ReceiveByte</STRONG> (Thumb, 176 bytes, Stack size 32 bytes, busresource_impl.o(.text.ReceiveByte))
-<BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = ReceiveByte &rArr; SclHigh &rArr; delay_us
-</UL>
-<BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclLow
-<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sda
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
-</UL>
-
-<P><STRONG><a name="[95]"></a>Stop</STRONG> (Thumb, 66 bytes, Stack size 16 bytes, busresource_impl.o(.text.Stop))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = Stop &rArr; SclHigh &rArr; delay_us
-</UL>
-<BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclLow
-<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sda
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SclHigh
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SoftwareI2cTransfer
-</UL>
-
-<P><STRONG><a name="[91]"></a>SclLow</STRONG> (Thumb, 26 bytes, Stack size 8 bytes, busresource_impl.o(.text.SclLow))
-<BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = SclLow &rArr; delay_us
-</UL>
-<BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_reset
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Stop
-<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReceiveByte
-<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendByte
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Start
-</UL>
-
-<P><STRONG><a name="[3a]"></a>BoardInit</STRONG> (Thumb, 146 bytes, Stack size 16 bytes, boardresource_impl.o(.text.BoardInit))
+<P><STRONG><a name="[3a]"></a>BoardInit</STRONG> (Thumb, 170 bytes, Stack size 16 bytes, boardresource_impl.o(.text.BoardInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = BoardInit &rArr; InitBus &rArr; GetBusInfo
 </UL>
-<BR>[Calls]<UL><LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBus
-<LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitGpio
-<LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitAdc
+<BR>[Calls]<UL><LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitBus
+<LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitGpio
+<LI><a href="#[7e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InitAdc
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> boardresource_impl.o(.rodata.g_BoardOps)
 </UL>
-<P><STRONG><a name="[96]"></a>_soft_delay_</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, system_gd32e511_512.o(.text._soft_delay_))
+<P><STRONG><a name="[b1]"></a>_soft_delay_</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, system_gd32e511_512.o(.text._soft_delay_))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = _soft_delay_
 </UL>
 <BR>[Called By]<UL><LI><a href="#[34]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemInit
 </UL>
 
-<P><STRONG><a name="[97]"></a>system_clock_config</STRONG> (Thumb, 8 bytes, Stack size 8 bytes, system_gd32e511_512.o(.text.system_clock_config))
+<P><STRONG><a name="[b2]"></a>system_clock_config</STRONG> (Thumb, 8 bytes, Stack size 8 bytes, system_gd32e511_512.o(.text.system_clock_config))
 <BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = system_clock_config &rArr; system_clock_120m_irc8m
 </UL>
-<BR>[Calls]<UL><LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_clock_120m_irc8m
+<BR>[Calls]<UL><LI><a href="#[be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_clock_120m_irc8m
 </UL>
 <BR>[Called By]<UL><LI><a href="#[34]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SystemInit
 </UL>
 
-<P><STRONG><a name="[a3]"></a>system_clock_120m_irc8m</STRONG> (Thumb, 386 bytes, Stack size 28 bytes, system_gd32e511_512.o(.text.system_clock_120m_irc8m))
+<P><STRONG><a name="[be]"></a>system_clock_120m_irc8m</STRONG> (Thumb, 386 bytes, Stack size 28 bytes, system_gd32e511_512.o(.text.system_clock_120m_irc8m))
 <BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = system_clock_120m_irc8m
 </UL>
-<BR>[Called By]<UL><LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_clock_config
+<BR>[Called By]<UL><LI><a href="#[b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_clock_config
 </UL>
 
-<P><STRONG><a name="[63]"></a>wait_flag</STRONG> (Thumb, 108 bytes, Stack size 24 bytes, bcm_gd32_i2c.o(.text.wait_flag))
-<BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = wait_flag &rArr; delay_us
+<P><STRONG><a name="[82]"></a>I2cHardwareRcuPort</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, mcu_i2c.o(.text.I2cHardwareRcuPort))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = I2cHardwareRcuPort
 </UL>
-<BR>[Calls]<UL><LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_get
-<LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_us
-</UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
+<BR>[Called By]<UL><LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
 </UL>
 
-<P><STRONG><a name="[61]"></a>configure</STRONG> (Thumb, 58 bytes, Stack size 16 bytes, bcm_gd32_i2c.o(.text.configure))
-<BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = configure &rArr; i2c_deinit &rArr; i2c_disable
+<P><STRONG><a name="[83]"></a>I2cRcuClock</STRONG> (Thumb, 54 bytes, Stack size 8 bytes, mcu_i2c.o(.text.I2cRcuClock))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = I2cRcuClock
 </UL>
-<BR>[Calls]<UL><LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_enable
-<LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_master_clock_config
-<LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_timing_config
-<LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
-<LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_i2c_clock_config
-</UL>
-<BR>[Called By]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cInit
+<BR>[Called By]<UL><LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
 </UL>
 
-<P><STRONG><a name="[36]"></a>read_bus</STRONG> (Thumb, 210 bytes, Stack size 48 bytes, bcm_gd32_i2c.o(.text.read_bus))
-<BR><BR>[Stack]<UL><LI>Max Depth = 156<LI>Call Chain = read_bus &rArr; BcmGd32I2cTransfer &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
+<P><STRONG><a name="[85]"></a>I2cHardwareConfig</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, mcu_i2c.o(.text.I2cHardwareConfig))
+<BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = I2cHardwareConfig &rArr; i2c_deinit &rArr; rcu_periph_reset_disable
 </UL>
-<BR>[Calls]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;target_address
+<BR>[Calls]<UL><LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;rcu_i2c_clock_config
+<LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_enable
+<LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_master_clock_config
+<LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_timing_config
+<LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_deinit
+<LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cPeriph
 </UL>
-<BR>[Address Reference Count : 1]<UL><LI> bcm_gd32_i2c.o(.rodata..L__const.BcmGd32I2cInit.bus)
-</UL>
-<P><STRONG><a name="[a2]"></a>target_address</STRONG> (Thumb, 88 bytes, Stack size 12 bytes, bcm_gd32_i2c.o(.text.target_address))
-<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = target_address
-</UL>
-<BR>[Called By]<UL><LI><a href="#[37]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;write_bus
-<LI><a href="#[36]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;read_bus
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
+<LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusInit
 </UL>
 
-<P><STRONG><a name="[37]"></a>write_bus</STRONG> (Thumb, 226 bytes, Stack size 304 bytes, bcm_gd32_i2c.o(.text.write_bus))
-<BR><BR>[Stack]<UL><LI>Max Depth = 412<LI>Call Chain = write_bus &rArr; BcmGd32I2cTransfer &rArr; configure &rArr; i2c_deinit &rArr; i2c_disable
+<P><STRONG><a name="[86]"></a>I2cPeriph</STRONG> (Thumb, 66 bytes, Stack size 8 bytes, mcu_i2c.o(.text.I2cPeriph))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = I2cPeriph
 </UL>
-<BR>[Calls]<UL><LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BcmGd32I2cTransfer
-<LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
-<LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;target_address
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
+<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cHardwareConfig
 </UL>
-<BR>[Address Reference Count : 1]<UL><LI> bcm_gd32_i2c.o(.rodata..L__const.BcmGd32I2cInit.bus)
-</UL><P>
+
+<P><STRONG><a name="[87]"></a>I2cWaitFlag</STRONG> (Thumb, 94 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cWaitFlag))
+<BR><BR>[Stack]<UL><LI>Max Depth = 44<LI>Call Chain = I2cWaitFlag &rArr; i2c_flag_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;i2c_flag_get
+</UL>
+<BR>[Called By]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusRead
+<LI><a href="#[76]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusWrite
+</UL>
+
+<P><STRONG><a name="[91]"></a>I2cSoftwareRcuPort</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, mcu_i2c.o(.text.I2cSoftwareRcuPort))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = I2cSoftwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+</UL>
+
+<P><STRONG><a name="[93]"></a>I2cSoftwareSclHigh</STRONG> (Thumb, 78 bytes, Stack size 24 bytes, mcu_i2c.o(.text.I2cSoftwareSclHigh))
+<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = I2cSoftwareSclHigh &rArr; gpio_input_bit_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
+<LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+</UL>
+<BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareInit
+<LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareReceiveByte
+<LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStop
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+</UL>
+
+<P><STRONG><a name="[94]"></a>I2cSoftwareStart</STRONG> (Thumb, 94 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cSoftwareStart))
+<BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = I2cSoftwareStart &rArr; I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclLow
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
+</UL>
+<BR>[Called By]<UL><LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareWrite
+</UL>
+
+<P><STRONG><a name="[95]"></a>I2cSoftwareSda</STRONG> (Thumb, 32 bytes, Stack size 24 bytes, mcu_i2c.o(.text.I2cSoftwareSda))
+<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
+</UL>
+<BR>[Called By]<UL><LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareWrite
+<LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareReceiveByte
+<LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStop
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+</UL>
+
+<P><STRONG><a name="[96]"></a>I2cSoftwareSendByte</STRONG> (Thumb, 172 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cSoftwareSendByte))
+<BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = I2cSoftwareSendByte &rArr; I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclLow
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
+</UL>
+<BR>[Called By]<UL><LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareWrite
+</UL>
+
+<P><STRONG><a name="[98]"></a>I2cSoftwareStop</STRONG> (Thumb, 92 bytes, Stack size 32 bytes, mcu_i2c.o(.text.I2cSoftwareStop))
+<BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = I2cSoftwareStop &rArr; I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclLow
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
+</UL>
+<BR>[Called By]<UL><LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareWrite
+</UL>
+
+<P><STRONG><a name="[9f]"></a>I2cSoftwareSclLow</STRONG> (Thumb, 26 bytes, Stack size 16 bytes, mcu_i2c.o(.text.I2cSoftwareSclLow))
+<BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = I2cSoftwareSclLow &rArr; gpio_bit_reset
+</UL>
+<BR>[Calls]<UL><LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_reset
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+</UL>
+<BR>[Called By]<UL><LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareReceiveByte
+<LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStop
+<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSendByte
+<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareStart
+</UL>
+
+<P><STRONG><a name="[97]"></a>I2cSoftwareReceiveByte</STRONG> (Thumb, 208 bytes, Stack size 40 bytes, mcu_i2c.o(.text.I2cSoftwareReceiveByte))
+<BR><BR>[Stack]<UL><LI>Max Depth = 76<LI>Call Chain = I2cSoftwareReceiveByte &rArr; I2cSoftwareSda &rArr; gpio_bit_write
+</UL>
+<BR>[Calls]<UL><LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclLow
+<LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSda
+<LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cSoftwareSclHigh
+</UL>
+<BR>[Called By]<UL><LI><a href="#[71]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2cBusSoftwareRead
+</UL>
+
+<P><STRONG><a name="[a3]"></a>SpiHardwareRcuPort</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, mcu_spi.o(.text.SpiHardwareRcuPort))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = SpiHardwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+</UL>
+
+<P><STRONG><a name="[a4]"></a>SpiRcuClock</STRONG> (Thumb, 72 bytes, Stack size 8 bytes, mcu_spi.o(.text.SpiRcuClock))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = SpiRcuClock
+</UL>
+<BR>[Called By]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+</UL>
+
+<P><STRONG><a name="[a5]"></a>SpiHardwareConfig</STRONG> (Thumb, 88 bytes, Stack size 48 bytes, mcu_spi.o(.text.SpiHardwareConfig))
+<BR><BR>[Stack]<UL><LI>Max Depth = 84<LI>Call Chain = SpiHardwareConfig &rArr; spi_deinit &rArr; rcu_periph_reset_disable
+</UL>
+<BR>[Calls]<UL><LI><a href="#[af]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_enable
+<LI><a href="#[ae]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_init
+<LI><a href="#[ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_struct_para_init
+<LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_deinit
+<LI><a href="#[a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiPeriph
+</UL>
+<BR>[Called By]<UL><LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusRead
+<LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusWrite
+<LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusInit
+</UL>
+
+<P><STRONG><a name="[a6]"></a>SpiPeriph</STRONG> (Thumb, 84 bytes, Stack size 8 bytes, mcu_spi.o(.text.SpiPeriph))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = SpiPeriph
+</UL>
+<BR>[Called By]<UL><LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusRead
+<LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusWrite
+<LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiHardwareConfig
+</UL>
+
+<P><STRONG><a name="[a7]"></a>SpiWaitFlag</STRONG> (Thumb, 76 bytes, Stack size 32 bytes, mcu_spi.o(.text.SpiWaitFlag))
+<BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = SpiWaitFlag &rArr; spi_flag_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+<LI><a href="#[b0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;spi_flag_get
+</UL>
+<BR>[Called By]<UL><LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusRead
+<LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusWrite
+</UL>
+
+<P><STRONG><a name="[aa]"></a>SpiSoftwareRcuPort</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, mcu_spi.o(.text.SpiSoftwareRcuPort))
+<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = SpiSoftwareRcuPort
+</UL>
+<BR>[Called By]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareInit
+</UL>
+
+<P><STRONG><a name="[ab]"></a>SpiSoftwareTransferByte</STRONG> (Thumb, 166 bytes, Stack size 40 bytes, mcu_spi.o(.text.SpiSoftwareTransferByte))
+<BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = SpiSoftwareTransferByte &rArr; gpio_input_bit_get
+</UL>
+<BR>[Calls]<UL><LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_reset
+<LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_set
+<LI><a href="#[7b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_input_bit_get
+<LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gpio_bit_write
+<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;McuClockDelayUs
+</UL>
+<BR>[Called By]<UL><LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareRead
+<LI><a href="#[77]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SpiBusSoftwareWrite
+</UL>
+<P>
 <H3>
 Undefined Global Symbols
 </H3><HR></body></html>

@@ -1,13 +1,15 @@
 /**
  * @file mcu_clock.c
- * @brief IRC8M to 80 MHz system clock and 1 us SysTick delay.
+ * @brief IRC8M to 80 MHz system clock and SysTick polling based us/ms/s delays.
  */
 #include "mcu_clock.h"
 #include "gd32e511_512.h"
 #include "gd32e511_512_fmc.h"
 #include "gd32e511_512_rcu.h"
 
-STATIC volatile DWORD g_SystickUs;
+/* SysTick 为 24 位递减计数器，单次装载上限 2^24-1。
+ * 80 MHz 下单次最长定时约 209 ms，更长延时按分片循环。 */
+#define MCU_SYSTICK_MAX_US   (0x00FFFFFFU / (SystemCoreClock / 1000000U))
 
 VOID McuClockInit(VOID)
 {
@@ -30,21 +32,39 @@ VOID McuClockInit(VOID)
     while ((RCU_CFG0 & RCU_CFG0_SCSS) != RCU_SCSS_PLL) {
     }
     SystemCoreClockUpdate();
-    g_SystickUs = 0U;
-    SysTick_Config(SystemCoreClock / 1000000U);
-    NVIC_SetPriority(SysTick_IRQn, 0U);
+    SysTick->CTRL = 0U;
 }
 
-VOID SysTick_Handler(VOID)
+VOID McuClockDelayUs(DWORD microsecs)
 {
-    ++g_SystickUs;
-}
+    CONST DWORD ticks_per_us = SystemCoreClock / 1000000U;
 
-VOID delay_us(DWORD microsecs)
-{
-    DWORD start = g_SystickUs;
+    while (microsecs > 0U) {
+        DWORD chunk = (microsecs > MCU_SYSTICK_MAX_US) ? MCU_SYSTICK_MAX_US : microsecs;
 
-    while ((DWORD)(g_SystickUs - start) < microsecs) {
-        __NOP();
+        SysTick->LOAD = chunk * ticks_per_us - 1U;
+        SysTick->VAL = 0U;
+        SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
+        while ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0U) {
+        }
+        SysTick->CTRL = 0U;
+
+        microsecs -= chunk;
     }
 }
+
+VOID McuClockDelayMs(DWORD millisecs)
+{
+    while (millisecs-- != 0U) {
+        McuClockDelayUs(1000U);
+    }
+}
+
+VOID McuClockDelayS(DWORD secs)
+{
+    while (secs-- != 0U) {
+        McuClockDelayMs(1000U);
+    }
+}
+
+

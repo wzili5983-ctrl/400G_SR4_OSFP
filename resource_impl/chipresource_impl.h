@@ -35,14 +35,8 @@
 
 #include "basedef.h"
 
-typedef union {
-    BYTE i2caddr;
-    BYTE spicsio;
-}ChipAddr_t;
-
 typedef struct {
     BYTE chipid;
-    ChipAddr_t addr;
     BYTE busid;
 }ChipForm_t;
 

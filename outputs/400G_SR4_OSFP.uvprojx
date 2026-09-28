@@ -10,7 +10,7 @@
       <TargetName>Target 1</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6220000::V6.22::ARMCLANG</pCCUsed>
+      <pCCUsed>6240000::V6.24::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -80,9 +80,9 @@
             <nStopB2X>0</nStopB2X>
           </BeforeMake>
           <AfterMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>cmd /c C:\Keil_v5\ARM\ARMCC\bin\fromelf.exe --bin --output ..\bin\400G_SR4_OSFP.bin .\Objects\400G_SR4_OSFP.axf</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -246,8 +246,8 @@
               </Ocm6>
               <IRAM>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
-                <Size>0x20000</Size>
+                <StartAddress>0x2000D500</StartAddress>
+                <Size>0x12B00</Size>
               </IRAM>
               <IROM>
                 <Type>1</Type>
@@ -276,8 +276,8 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0x8000000</StartAddress>
-                <Size>0x80000</Size>
+                <StartAddress>0x8010200</StartAddress>
+                <Size>0x2de00</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -301,8 +301,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
-                <Size>0x20000</Size>
+                <StartAddress>0x2000D500</StartAddress>
+                <Size>0x12B00</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -323,7 +323,7 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>2</wLevel>
+            <wLevel>1</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>1</uC99>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32E511_512</Define>
               <Undefine></Undefine>
-              <IncludePath>..\driver\projectfiles\inc;..\common;..\driver\mcu\core;..\driver\mcu\peripheral\include;..\driver\mcu\system;..\resource;..\resource_impl;..\driver\odsp\projectfiles\inc;..\driver\odsp\projectfiles;..\driver\mcu\adpat\inc</IncludePath>
+              <IncludePath>..\driver\projectfiles\inc;..\common;..\driver\mcu\core;..\driver\mcu\peripheral\include;..\driver\mcu\system;..\resource;..\resource_impl;..\driver\odsp\projectfiles\inc;..\driver\odsp\projectfiles;..\driver\mcu\adpat\inc;..\driver\drv\inc;..\driver\tia\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -437,6 +437,16 @@
               <FileType>1</FileType>
               <FilePath>..\resource\boardresource.c</FilePath>
             </File>
+            <File>
+              <FileName>flashresource.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\resource\flashresource.c</FilePath>
+            </File>
+            <File>
+              <FileName>sramresource.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\resource\sramresource.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -471,6 +481,16 @@
               <FileName>boardresource_impl.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\resource_impl\boardresource_impl.c</FilePath>
+            </File>
+            <File>
+              <FileName>flashresource_impl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\resource_impl\flashresource_impl.c</FilePath>
+            </File>
+            <File>
+              <FileName>sramresource_impl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\resource_impl\sramresource_impl.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -861,6 +881,36 @@
               <FileName>timer2_scheduler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\mcu\adpat\src\timer2_scheduler.c</FilePath>
+            </File>
+            <File>
+              <FileName>mcu_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\mcu\adpat\src\mcu_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>mcu_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\mcu\adpat\src\mcu_spi.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>drv</GroupName>
+          <Files>
+            <File>
+              <FileName>drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\drv\src\drv.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>tia</GroupName>
+          <Files>
+            <File>
+              <FileName>tia.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\tia\src\tia.c</FilePath>
             </File>
           </Files>
         </Group>

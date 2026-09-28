@@ -1,11 +1,13 @@
 ./objects/host_to_chip_ipc.o: \
   ..\driver\odsp\projectfiles\src\host_to_chip_ipc.c \
   ..\driver\odsp\projectfiles\inc\hr_time.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
   ..\driver\odsp\projectfiles\regs_common.h \
   ..\driver\odsp\projectfiles\access.h \
   ..\driver\odsp\projectfiles\inc\reg_access.h \
   ..\driver\odsp\projectfiles\type_defns.h \
   ..\driver\odsp\projectfiles\logger.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdio.h \
   ..\driver\odsp\projectfiles\hercules_regs.h \
   ..\driver\odsp\projectfiles\hercules_fw_regs.h \
   ..\driver\odsp\projectfiles\hercules_pp_regs.h \

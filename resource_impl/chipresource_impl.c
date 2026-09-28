@@ -33,18 +33,22 @@
 #include "chipresource_impl.h"
 #include "busresource.h"
 #include "bcm_arm_platform.h"
+#include "bcm_gd32_i2c.h"
+#include "drv.h"
+#include "tia.h"
 
 STATIC DWORD DspWrite(BYTE id, DWORD addr, DWORD data);
 STATIC DWORD DspRead(BYTE id, DWORD addr, DWORD *data);
-STATIC DWORD InitDspBus(BYTE rsttype);
-STATIC DWORD InitInnerBus(BYTE rsttype);
+STATIC DWORD InitDsp(BYTE rsttype);
 
 STATIC CONST ChipInfo_t g_ChipInfoImpl[CHIP_ID_NUM - CHIP_ID_START] = {
-    {{CHIP_ID_DSP, {.i2caddr = 0xA0}, BUS_ID_PHY}, {DspWrite, DspRead, InitDspBus}},
-    /* Excel supplies addresses but not GN1816/GN1848 register framing.
-     * Use TransferBus with the chip-specific protocol; do not assume 8-bit registers. */
-    {{CHIP_ID_DRV, {.i2caddr = 0xA6}, BUS_ID_INNER}, {NULL, NULL, InitInnerBus}},
-    {{CHIP_ID_TIA, {.i2caddr = 0xB6}, BUS_ID_INNER}, {NULL, NULL, InitInnerBus}}
+    {{CHIP_ID_DSP, BUS_ID_DSP}, {DspWrite, DspRead, InitDsp}},
+    /* GN1848 (Semtech) laser driver: 8-bit registers, 7-bit address 0x53 on
+     * BUS_ID_DRV, single-register read/write via drv.c. */
+    {{CHIP_ID_DRV, BUS_ID_DRV}, {DrvWrite, DrvRead, InitDrv}},
+    /* GN1816 (Semtech) TIA: 8-bit registers, 7-bit address 0x5B on
+     * BUS_ID_TIA, single-register read/write via tia.c. */
+    {{CHIP_ID_TIA, BUS_ID_TIA}, {TiaWrite, TiaRead, InitTia}}
 };
 
 CONST ChipInfo_t *GetChipInfo(VOID)
@@ -57,17 +61,13 @@ CONST ChipInfo_t *GetChipInfoById(BYTE id)
     return id >= CHIP_ID_START && id < CHIP_ID_NUM ? &g_ChipInfoImpl[id - CHIP_ID_START] : NULL;
 }
 
-STATIC DWORD InitDspBus(BYTE rsttype)
+STATIC DWORD InitDsp(BYTE rsttype)
 {
     (void)rsttype;
-
-    return InitBus(BUS_ID_PHY);
-}
-
-STATIC DWORD InitInnerBus(BYTE rsttype)
-{
-    (void)rsttype;
-    return InitBus(BUS_ID_INNER);
+    /* The DSP memory path (DspWrite/DspRead via BcmArm*) runs on I2C0 through
+     * the bcm driver; initialize it here instead of the bus resource layer. */
+    BcmGd32I2cInit();
+    return OK;
 }
 
 STATIC DWORD DspWrite(BYTE id, DWORD addr, DWORD data)

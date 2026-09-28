@@ -32,7 +32,13 @@
 #define __HXTAL           (HXTAL_VALUE)            /* high speed crystal oscillator frequency */
 #define __SYS_OSC_CLK     (__IRC8M)                /* main oscillator frequency */
 
-#define VECT_TAB_OFFSET  (uint32_t)0x00            /* vector table base offset */
+/* vector table base offset: the APP is linked at the APP_A slot payload
+ * base (memory_map.h MEM_APP_A_BASE + the 512B frame header area, see
+ * flashresource_impl.h FRAME_PAYLOAD_OFF), so VTOR must point at
+ * 0x08010200, not at the flash base. The APP_B build carries its own link
+ * base; the bootloader sets SCB->VTOR to the started slot's payload base
+ * before jumping -- this value only covers the standalone / debugger path. */
+#define VECT_TAB_OFFSET  (uint32_t)0x00010200        /* APP_A payload base - flash base */
 
 /* select a system clock by uncommenting the following line */
 //#define __SYSTEM_CLOCK_8M_HXTAL              (__HXTAL)

@@ -1,5 +1,11 @@
 ./objects/main.o: ..\main\main.c ..\driver\mcu\system\gd32e511_512.h \
   ..\driver\mcu\core\core_cm33.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_version.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_compiler.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_armclang.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\arm_acle.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\m-profile\cmsis_armclang_m.h \
   ..\driver\mcu\system\system_gd32e511_512.h \
   ..\driver\mcu\system\gd32e511_512_libopt.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_adc.h \
@@ -26,4 +32,5 @@
   ..\driver\mcu\peripheral\include\gd32e511_512_timer.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_usart.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_wwdgt.h \
-  ..\resource\boardresource.h ..\common\basedef.h
+  ..\resource\boardresource.h ..\common\basedef.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdbool.h

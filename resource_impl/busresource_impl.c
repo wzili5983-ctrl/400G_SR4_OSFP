@@ -5,20 +5,26 @@
  */
 #include "busresource_impl.h"
 #include "gd32e511_512.h"
-#include "bcm_gd32_i2c.h"
-#include "hr_time.h"
+#include "gpioresource.h"
+#include "mcu_i2c.h"
+#include "mcu_spi.h"
 
 STATIC DWORD BoardBusInit(BYTE id);
-STATIC DWORD BoardBusTransfer(BYTE id, BYTE address7, CONST BYTE *tx, BYTE txlen, BYTE *rx, BYTE rxlen);
+STATIC DWORD BoardBusWrite(CONST BusTotalForm_t *bus, CONST BYTE *tx, BYTE txlen);
+STATIC DWORD BoardBusRead(CONST BusTotalForm_t *bus, BYTE *rx, BYTE rxlen);
 
 STATIC BOOL g_Ready[BUS_ID_NUM];
 
+/* BusTotalForm_t: id, bus_type, busform (.i2c/.spi), software.
+ * I2cForm_t: i2cno, i2caddr (7-bit), port, scl, sda.
+ * SpiForm_t: spino, spicsid (a GPIO ID, active low CS), port, sck, mosi, miso.
+ * TIA and DRV each get a software I2C entry on PB8(SCL)/PB9(SDA); DSP uses the
+ * hardware I2C0 bus (PB6=SCL, PB7=SDA, 7-bit address 0x50). The SPI chip
+ * select is driven by the bus layer around each WriteBus/ReadBus call. */
 STATIC CONST BusInfo_t g_BusInfo[BUS_ID_NUM] = {
-    /* PHY/ODSP I2C is connected to MCU PB6 (SCL) and PB7 (SDA). */
-    {{BUS_ID_PHY, BUS_I2C_MASTER, GPIOB, GPIO_PIN_6, GPIO_PIN_7, FALSE}, {BoardBusInit, BoardBusTransfer}},
-    {{BUS_ID_INNER, BUS_I2C_MASTER, GPIOB, GPIO_PIN_8, GPIO_PIN_9, TRUE}, {BoardBusInit, BoardBusTransfer}},
-    /* Slave protocol/address not specified; never drive host pins as a master. */
-    {{BUS_ID_HOST, BUS_I2C_SLAVE, GPIOB, GPIO_PIN_13, GPIO_PIN_14, FALSE}, {NULL, NULL}},
+    {{BUS_ID_TIA, BUS_TYPE_I2C, {.i2c = {0, 0x5B, GPIOB, GPIO_PIN_8, GPIO_PIN_9}}, TRUE}, {BoardBusInit, BoardBusWrite, BoardBusRead}},
+    {{BUS_ID_DRV, BUS_TYPE_I2C, {.i2c = {0, 0x53, GPIOB, GPIO_PIN_8, GPIO_PIN_9}}, TRUE}, {BoardBusInit, BoardBusWrite, BoardBusRead}},
+    {{BUS_ID_DSP, BUS_TYPE_I2C, {.i2c = {0, 0x50, GPIOB, GPIO_PIN_6, GPIO_PIN_7}}, FALSE}, {BoardBusInit, BoardBusWrite, BoardBusRead}},
 };
 
 CONST BusInfo_t *GetBusInfo(BYTE id)
@@ -26,178 +32,101 @@ CONST BusInfo_t *GetBusInfo(BYTE id)
     return id < BUS_ID_NUM ? &g_BusInfo[id] : NULL;
 }
 
-STATIC VOID Sda(BOOL high)
-{
-    gpio_bit_write(GPIOB, GPIO_PIN_9, high ? SET : RESET);
-}
-
-STATIC VOID SclLow(VOID)
-{
-    gpio_bit_reset(GPIOB, GPIO_PIN_8);
-    delay_us(5);
-}
-
-STATIC DWORD SclHigh(VOID)
-{
-    DWORD timeout = 10000;
-    gpio_bit_set(GPIOB, GPIO_PIN_8);
-    while(gpio_input_bit_get(GPIOB, GPIO_PIN_8) == RESET) {
-        if(timeout-- == 0) {
-            return ERR;
-        }
-        delay_us(1);
-    }
-    delay_us(5);
-    return OK;
-}
-
-STATIC DWORD Start(VOID)
-{
-    Sda(TRUE);
-    delay_us(5);
-    if(SclHigh() != OK || gpio_input_bit_get(GPIOB, GPIO_PIN_9) == RESET) {
-        return ERR;
-    }
-    Sda(FALSE);
-    delay_us(5);
-    SclLow();
-    return OK;
-}
-
-STATIC DWORD Stop(VOID)
-{
-    SclLow();
-    Sda(FALSE);
-    delay_us(5);
-    if(SclHigh() != OK) {
-        Sda(TRUE);
-        return ERR;
-    }
-    Sda(TRUE);
-    delay_us(5);
-    return OK;
-}
-
-STATIC DWORD SendByte(BYTE value)
-{
-    BYTE i;
-    DWORD result;
-    for(i = 0; i < 8; ++i) {
-        Sda((value & 0x80U) != 0);
-        delay_us(5);
-        if(SclHigh() != OK) {
-            return ERR;
-        }
-        SclLow();
-        value <<= 1;
-    }
-    Sda(TRUE);
-    delay_us(5);
-    if(SclHigh() != OK) {
-        return ERR;
-    }
-    result = gpio_input_bit_get(GPIOB, GPIO_PIN_9) == RESET ? OK : ERR;
-    SclLow();
-    return result;
-}
-
-STATIC DWORD ReceiveByte(BYTE *value, BOOL last)
-{
-    BYTE i, data = 0;
-    Sda(TRUE);
-    for(i = 0; i < 8; ++i) {
-        if(SclHigh() != OK) {
-            return ERR;
-        }
-        data = (BYTE)((data << 1) | (gpio_input_bit_get(GPIOB, GPIO_PIN_9) == SET ? 1U : 0U));
-        SclLow();
-    }
-    Sda(last);
-    delay_us(5);
-    if(SclHigh() != OK) {
-        return ERR;
-    }
-    SclLow();
-    Sda(TRUE);
-    *value = data;
-    return OK;
-}
-
 STATIC DWORD BoardBusInit(BYTE id)
 {
-    if(id >= BUS_ID_NUM) {
+    CONST BusInfo_t *info = GetBusInfo(id);
+    if(info == NULL) {
         return ERR;
     }
     if(g_Ready[id]) {
         return OK;
     }
-    if(id == BUS_ID_PHY) {
-        BcmGd32I2cInit();
-    } else if(id == BUS_ID_INNER) {
-        rcu_periph_clock_enable(RCU_GPIOB);
-        gpio_bit_set(GPIOB, GPIO_PIN_8 | GPIO_PIN_9);
-        gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, GPIO_PIN_8 | GPIO_PIN_9);
-        gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_8 | GPIO_PIN_9);
-        if(SclHigh() != OK || gpio_input_bit_get(GPIOB, GPIO_PIN_9) == RESET) {
-            return ERR;
+    switch(info->bustotalform.bus_type) {
+    case BUS_TYPE_I2C: {
+        CONST I2cForm_t *i2c = &info->bustotalform.busform.i2c;
+        if(info->bustotalform.software) {
+            if(I2cBusSoftwareInit(i2c->port, i2c->scl, i2c->sda) != OK) {
+                return ERR;
+            }
+        } else {
+            I2cBusInit(i2c->i2cno, i2c->port, i2c->scl, i2c->sda);
         }
-    } else {
+        break;
+    }
+    case BUS_TYPE_SPI: {
+        CONST SpiForm_t *spi = &info->bustotalform.busform.spi;
+        /* Release the chip select; the GPIO itself is initialized by BoardInit. */
+        (void)WriteGpio(spi->spicsid.spicsio, IO_HIGH);
+        if(info->bustotalform.software) {
+            (void)SpiBusSoftwareInit(spi->port, spi->sck, spi->mosi, spi->miso);
+        } else {
+            SpiBusInit(spi->spino, spi->port, spi->sck, spi->mosi, spi->miso);
+        }
+        break;
+    }
+    default:
         return ERR;
     }
     g_Ready[id] = TRUE;
     return OK;
 }
 
-/* Arguments and bus readiness are checked by BoardBusTransfer. */
-STATIC DWORD SoftwareI2cTransfer(BYTE address7, CONST BYTE *tx, BYTE txlen, BYTE *rx, BYTE rxlen)
+STATIC DWORD BoardBusWrite(CONST BusTotalForm_t *bus, CONST BYTE *tx, BYTE txlen)
 {
-    BYTE i;
-    BYTE address = (BYTE)(address7 << 1);
-    if(Start() != OK) {
-        Sda(TRUE);
-        gpio_bit_set(GPIOB, GPIO_PIN_8);
+    if(bus == NULL || !g_Ready[bus->id]) {
         return ERR;
     }
-    if(txlen != 0) {
-        if(SendByte(address) != OK) {
-            goto fail;
+    switch(bus->bus_type) {
+    case BUS_TYPE_I2C: {
+        CONST I2cForm_t *i2c = &bus->busform.i2c;
+        if(bus->software) {
+            return I2cBusSoftwareWrite(i2c->port, i2c->scl, i2c->sda, i2c->i2caddr.i2caddr, tx, txlen);
         }
-        for(i = 0; i < txlen; ++i) {
-            if(SendByte(tx[i]) != OK) {
-                goto fail;
-            }
-        }
+        return I2cBusWrite(i2c->i2cno, i2c->i2caddr.i2caddr, tx, txlen);
     }
-    if(rxlen != 0) {
-        if(txlen != 0 && Start() != OK) {
-            goto fail;
+    case BUS_TYPE_SPI: {
+        CONST SpiForm_t *spi = &bus->busform.spi;
+        BYTE cs = spi->spicsid.spicsio;
+        DWORD result;
+        /* Active low chip select around the whole write. */
+        if(WriteGpio(cs, IO_LOW) != OK) {
+            return ERR;
         }
-        if(SendByte((BYTE)(address | 1U)) != OK) {
-            goto fail;
-        }
-        for(i = 0; i < rxlen; ++i) {
-            if(ReceiveByte(&rx[i], i == rxlen - 1U) != OK) {
-                goto fail;
-            }
-        }
+        result = bus->software ? SpiBusSoftwareWrite(spi->port, spi->sck, spi->mosi, spi->miso, tx, txlen)
+                               : SpiBusWrite(spi->spino, tx, txlen);
+        (void)WriteGpio(cs, IO_HIGH);
+        return result;
     }
-    return Stop();
-fail:
-    (void)Stop();
-    return ERR;
+    default:
+        return ERR;
+    }
 }
 
-STATIC DWORD BoardBusTransfer(BYTE id, BYTE address7, CONST BYTE *tx, BYTE txlen, BYTE *rx, BYTE rxlen)
+STATIC DWORD BoardBusRead(CONST BusTotalForm_t *bus, BYTE *rx, BYTE rxlen)
 {
-    if(id >= BUS_ID_NUM || !g_Ready[id] || address7 < 8 || address7 > 0x77 ||
-       (txlen == 0 && rxlen == 0) || (txlen != 0 && tx == NULL) || (rxlen != 0 && rx == NULL)) {
+    if(bus == NULL || !g_Ready[bus->id]) {
         return ERR;
     }
-    switch(id) {
-    case BUS_ID_PHY:
-        return BcmGd32I2cTransfer(address7, tx, txlen, rx, rxlen) == 0 ? OK : ERR;
-    case BUS_ID_INNER:
-        return SoftwareI2cTransfer(address7, tx, txlen, rx, rxlen);
+    switch(bus->bus_type) {
+    case BUS_TYPE_I2C: {
+        CONST I2cForm_t *i2c = &bus->busform.i2c;
+        if(bus->software) {
+            return I2cBusSoftwareRead(i2c->port, i2c->scl, i2c->sda, i2c->i2caddr.i2caddr, rx, rxlen);
+        }
+        return I2cBusRead(i2c->i2cno, i2c->i2caddr.i2caddr, rx, rxlen);
+    }
+    case BUS_TYPE_SPI: {
+        CONST SpiForm_t *spi = &bus->busform.spi;
+        BYTE cs = spi->spicsid.spicsio;
+        DWORD result;
+        if(WriteGpio(cs, IO_LOW) != OK) {
+            return ERR;
+        }
+        result = bus->software ? SpiBusSoftwareRead(spi->port, spi->sck, spi->mosi, spi->miso, rx, rxlen)
+                               : SpiBusRead(spi->spino, rx, rxlen);
+        (void)WriteGpio(cs, IO_HIGH);
+        return result;
+    }
     default:
         return ERR;
     }

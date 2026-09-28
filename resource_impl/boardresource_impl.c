@@ -30,8 +30,10 @@ STATIC DWORD BoardInit(VOID)
             return ERR;
         }
     }
-    if(InitBus(BUS_ID_PHY) != OK || InitBus(BUS_ID_INNER) != OK) {
-        return ERR;
+    for(id = 0; id < BUS_ID_NUM; ++id) {
+        if(InitBus(id) != OK) {
+            return ERR;
+        }
     }
     return OK;
 }

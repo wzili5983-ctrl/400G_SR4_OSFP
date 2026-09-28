@@ -29,7 +29,7 @@ Chip 读写路径：业务代码 → `WriteChip` / `ReadChip` → `GetChipInfoBy
 - 使用 `STATIC`、`CONST`、`TRUE`、`FALSE` 等工程定义；私有函数和对象使用 `STATIC`，只读配置使用 `STATIC CONST`。
 - 文件头采用 Doxygen 风格注释，包含 `@file`、`@brief`、真实作者信息及版权声明；保留已有许可，不虚构作者或修改版权归属。
 - 头文件使用全大写、基于文件名的 include guard（例如 `CHIPRESOURCE_IMPL_H`），依次写 `#ifndef`、`#define`、正文和 `#endif`。
-- 结构体、联合体类型使用 PascalCase 并以 `_t` 结尾，例如 `ChipAddr_t`、`ChipForm_t`、`ChipOps_t`、`ChipInfo_t`。资源 ID 枚举沿用所属模块命名，例如 `CHIP_ID_ENUM`；枚举常量和宏使用全大写下划线命名，不为统一格式重命名已有接口。
+- 结构体、联合体类型使用 PascalCase 并以 `_t` 结尾，例如 `BusForm_t`、`ChipForm_t`、`ChipOps_t`、`ChipInfo_t`。资源 ID 枚举沿用所属模块命名，例如 `CHIP_ID_ENUM`；枚举常量和宏使用全大写下划线命名，不为统一格式重命名已有接口。
 - 函数使用 PascalCase；资源操作通过函数指针表（`*Ops_t`）注入，失败返回 `ERR`，成功返回 `OK`。
 - 文件内静态对象使用 `g_` 前缀，例如 `g_ChipInfoImpl`；参数、成员和局部变量使用简洁小写名称，例如 `chipid`、`busid`、`addr`、`data`、`result`，既有模块的下划线字段命名保持一致。
 - `.c` 首先包含自身头文件，再包含所需资源层和驱动头文件；例如依次包含 `chipresource_impl.h`、`busresource.h`、`bcm_arm_platform.h`。随后组织私有函数声明、静态配置表、查询函数、初始化辅助函数和读写回调；有可变状态时在静态数据区单独声明。
@@ -38,13 +38,24 @@ Chip 读写路径：业务代码 → `WriteChip` / `ReadChip` → `GetChipInfoBy
 - 保护条件采用多行形式，`return ERR;` 独占一行；简单查询或状态转换可用三目运算符。一般每行一条语句，赋值和返回分开写。
 - 指针统一写作 `CONST ChipInfo_t *info`、`DWORD *data`，返回指针的函数写作 `CONST ChipInfo_t *GetChipInfo(VOID)`。二元运算符两侧及逗号后留空格，函数名与 `(` 之间不留空格；无参数函数使用 `VOID`。
 - 结构体、联合体和枚举的左花括号跟随声明，例如 `typedef struct {`；结束形式沿用 `}ChipForm_t;`。成员使用 4 个空格缩进，可在同一声明块内按列对齐，不混入 Tab，不保留行尾空白。
-- 配置表按资源逐行列出，按类型声明顺序使用嵌套花括号初始化 Form 和 Ops；联合体成员使用指定初始化，例如 `{.i2caddr = 0xA0}`。避免为对齐而重排无关代码。
+- 配置表按资源逐行列出，按类型声明顺序使用嵌套花括号初始化 Form 和 Ops；联合体成员使用指定初始化，例如 `{.i2caddr = 0xA0}`（若该资源定义了联合体）。避免为对齐而重排无关代码。
 - 注释采用简洁的 `/* ... */`，重点解释硬件约束、操作顺序和调用契约。保留但未使用的参数用 `(void)rsttype;` 显式标记。
+
+## 延时函数
+
+- 工程内所有延时统一使用 `driver/mcu/adpat/src/mcu_clock.c` 中的延时函数：`McuClockDelayUs`、`McuClockDelayMs`、`McuClockDelayS`（声明见 `driver/mcu/adpat/inc/mcu_clock.h`）。
+- 不新建其他延时实现，不调用 `hr_time_arm.c`、SDK 示例或内联循环等替代延时；第三方库保留自身实现，但新增和业务代码一律使用上述接口。
+
+## 任务调度
+
+- 任务 ID 统一在 `driver/mcu/adpat/inc/timer2_scheduler.h` 中定义（`TASK_ID_*`），各模块 include 该头文件使用，不在模块自己的头文件中重复定义任务 ID。
+- 任务通过 `Timer2SchedulerAdd(function, arg, delay_ticks, interval_ticks, run_count)` 注册：delay_ticks 为首次执行延时，interval_ticks 为执行间隔，run_count 为执行次数（`TIMER2_TASK_FOREVER` 表示无限次）；保存返回的 `Timer2TaskId_t` 句柄。
+- 已创建的任务用 `Timer2SchedulerModify` 修改函数、参数、延时、间隔和次数；周期性任务在主循环中调用 `Timer2SchedulerRun()` 执行。
 
 ## 资源数据模型
 
 - 资源 ID 枚举：命名沿用模块接口；`<NAME>_ID_NUM` 是 ID 上界，不一定等于配置表长度。Chip 使用 `CHIP_ID_ENUM`，表内有效 ID 从 `CHIP_ID_START` 开始。
-- `<Name>Addr_t`：按需使用联合体描述不同寻址方式，例如 `ChipAddr_t` 的 `i2caddr` 和 `spicsio`。
+- `<Name>Addr_t`：按需使用联合体描述不同寻址方式（若该资源需要多种寻址方式）。
 - `<Name>Form_t`：资源 ID 和板级配置参数，例如 `ChipForm_t` 的 `chipid`、`addr` 和 `busid`。
 - `<Name>Ops_t`：操作函数指针表，回调签名与声明一致。
 - `<Name>Info_t`：组合配置和操作表，例如 `ChipForm_t chipform` 与 `ChipOps_t chipops`。
@@ -54,9 +65,9 @@ Chip 读写路径：业务代码 → `WriteChip` / `ReadChip` → `GetChipInfoBy
 
 ```c
 STATIC CONST ChipInfo_t g_ChipInfoImpl[CHIP_ID_NUM - CHIP_ID_START] = {
-    {{CHIP_ID_DSP, {.i2caddr = 0xA0}, BUS_ID_PHY}, {DspWrite, DspRead, InitDspBus}},
-    {{CHIP_ID_DRV, {.i2caddr = 0xA6}, BUS_ID_INNER}, {NULL, NULL, InitInnerBus}},
-    {{CHIP_ID_TIA, {.i2caddr = 0xB6}, BUS_ID_INNER}, {NULL, NULL, InitInnerBus}}
+    {{CHIP_ID_DSP, BUS_ID_DSP}, {DspWrite, DspRead, InitDspBus}},
+    {{CHIP_ID_DRV, BUS_ID_DRV}, {NULL, NULL, InitInnerBus}},
+    {{CHIP_ID_TIA, BUS_ID_TIA}, {NULL, NULL, InitInnerBus}}
 };
 
 CONST ChipInfo_t *GetChipInfoById(BYTE id)
@@ -92,7 +103,7 @@ Chip 查询必须先保证 `CHIP_ID_START <= id < CHIP_ID_NUM`，再使用 `id -
 
 - `ChipWrite` / `ChipRead` 接收芯片 ID、寄存器地址及数据或输出指针；`ChipInit` 仅接收 `rsttype`，回调声明、定义和操作表签名必须一致。
 - DSP 读写通过 `BcmArmWrite` / `BcmArmRead` 完成，将驱动返回的 `0` 转为 `OK`，其他值转为 `ERR`；读取成功后再把临时结果写入输出指针。
-- DRV、TIA 当前仅配置总线初始化，读写回调保持 `NULL`。已知 I2C 地址不足以推断寄存器协议，不默认使用 8 位寄存器；实现读写前须确认器件协议，并按需使用 `TransferBus`。
+- DRV、TIA 当前仅配置总线初始化，读写回调保持 `NULL`。已知 I2C 地址不足以推断寄存器协议，不默认使用 8 位寄存器；实现读写前须确认器件协议，并按需使用 `WriteBus` / `ReadBus`。
 
 ## 新增资源
 

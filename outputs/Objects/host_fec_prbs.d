@@ -1,6 +1,10 @@
 ./objects/host_fec_prbs.o: ..\driver\projectfiles\src\host_fec_prbs.c \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdio.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\string.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\time.h \
   ..\driver\odsp\projectfiles\chip_config_def.h \
   ..\driver\odsp\projectfiles\inc\hr_time.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
   ..\driver\odsp\projectfiles\type_defns.h \
   ..\driver\odsp\projectfiles\access.h \
   ..\driver\odsp\projectfiles\inc\reg_access.h \

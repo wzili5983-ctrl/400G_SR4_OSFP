@@ -35,10 +35,16 @@
 
 #include "basedef.h"
 
+typedef enum {
+    MCU_AD_SAMPLE_GROUP,
+    RSSI_AD_SAMPLE_GROUP
+}AdcGroup_t;
+
 typedef struct {
-    BYTE id, channel, document_channel, resolution_bits;
-    DWORD port, pin, peripheral;
-    WORD reference_mv;
+    BYTE  chipid;
+    BYTE channel;
+    BYTE adgroup;
+    WORD     rsv;
 }AdcForm_t;
 
 typedef struct {

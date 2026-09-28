@@ -12,7 +12,7 @@ typedef struct {
     Timer2TaskFunction_t function;
     VOID *arg;
     volatile DWORD delay;
-    DWORD period;
+    DWORD interval;
     DWORD remaining;
     volatile BYTE used;
     volatile BYTE running;
@@ -54,18 +54,37 @@ VOID Timer2SchedulerInit(DWORD timer_clock_hz, DWORD tick_hz)
     NVIC_EnableIRQ(TIMER2_IRQn);
     timer_enable(TIMER2);
 }
-Timer2TaskId_t Timer2SchedulerAdd(Timer2TaskFunction_t function, VOID *arg, DWORD delay_ticks, DWORD run_count)
+/* delay_ticks: ticks before the first run; interval_ticks: ticks between runs;
+ * run_count: TIMER2_TASK_FOREVER(0) runs forever, otherwise the run count. */
+Timer2TaskId_t Timer2SchedulerAdd(Timer2TaskFunction_t function, VOID *arg, DWORD delay_ticks, DWORD interval_ticks, DWORD run_count)
 {
     if (function == NULL) {
         return -1;
     }
     for (DWORD index = 0U; index < TIMER2_SCHEDULER_MAX_TASKS; ++index) {
         if (!g_Tasks[index].used) {
-            g_Tasks[index] = (Timer2Task_t){function, arg, delay_ticks, delay_ticks, run_count, TRUE, TRUE, FALSE};
+            g_Tasks[index] = (Timer2Task_t){function, arg, delay_ticks, interval_ticks, run_count, TRUE, TRUE, FALSE};
             return (Timer2TaskId_t)index;
         }
     }
     return -1;
+}
+
+/* Reconfigure a created task: new function/arg, restart with a new first delay,
+ * interval and run count; pending state is cleared. */
+DWORD Timer2SchedulerModify(Timer2TaskId_t id, Timer2TaskFunction_t function, VOID *arg, DWORD delay_ticks, DWORD interval_ticks, DWORD run_count)
+{
+    if (!Timer2TaskIdValid(id) || function == NULL) {
+        return ERR;
+    }
+    g_Tasks[id].function = function;
+    g_Tasks[id].arg = arg;
+    g_Tasks[id].delay = delay_ticks;
+    g_Tasks[id].interval = interval_ticks;
+    g_Tasks[id].remaining = run_count;
+    g_Tasks[id].running = TRUE;
+    g_Tasks[id].pending = FALSE;
+    return OK;
 }
 
 DWORD Timer2SchedulerRemove(Timer2TaskId_t id)
@@ -104,7 +123,7 @@ VOID Timer2SchedulerTickISR(VOID)
             }
             if (g_Tasks[index].delay == 0U) {
                 g_Tasks[index].pending = TRUE;
-                g_Tasks[index].delay = g_Tasks[index].period;
+                g_Tasks[index].delay = g_Tasks[index].interval;
             }
         }
     }

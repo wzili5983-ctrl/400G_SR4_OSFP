@@ -8,33 +8,56 @@
 
 #include "basedef.h"
 
+typedef union {
+    BYTE i2caddr;
+    BYTE spicsio;
+}ChipAddr_t;
+
+typedef struct {
+    BYTE i2cno;
+    ChipAddr_t i2caddr;
+    DWORD port, scl, sda;
+}I2cForm_t;
+
+typedef struct 
+{
+    BYTE spino;
+    ChipAddr_t  spicsid;
+    DWORD port, sck , mosi, miso;
+}SpiForm_t;
+
+typedef union {
+    I2cForm_t i2c;
+    SpiForm_t spi;
+}BusForm_t;
+
 typedef enum {
-    BUS_I2C_MASTER,
-    BUS_I2C_SLAVE,
-    BUS_DSP_SPI
-}BusMode_t;
+    BUS_TYPE_I2C,
+    BUS_TYPE_SPI
+}BusType_t;
 
 typedef struct {
     BYTE id;
-    BusMode_t mode;
-    DWORD port, scl, sda;
-    BOOL software;
-}BusForm_t;
+    BusType_t bus_type;
+    BusForm_t busform;
+    BOOL      software;
+}BusTotalForm_t;
 
 typedef struct {
     DWORD (*BusInit)(BYTE id);
-    DWORD (*BusTransfer)(BYTE id, BYTE address7, CONST BYTE *tx, BYTE txlen, BYTE *rx, BYTE rxlen);
+    DWORD (*BusWrite)(CONST BusTotalForm_t *bus, CONST BYTE *tx, BYTE txlen);
+    DWORD (*BusRead)(CONST BusTotalForm_t *bus, BYTE *rx, BYTE rxlen);
 }BusOps_t;
 
 typedef struct {
-    BusForm_t busform;
+    BusTotalForm_t bustotalform;
     BusOps_t busops;
 }BusInfo_t;
 
 typedef enum {
-    BUS_ID_PHY,
-    BUS_ID_INNER,
-    BUS_ID_HOST,
+    BUS_ID_TIA,
+    BUS_ID_DRV,
+    BUS_ID_DSP,
     BUS_ID_NUM
 }BusId_t;
 

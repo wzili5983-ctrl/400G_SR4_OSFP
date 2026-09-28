@@ -39,6 +39,7 @@
  * PA5 is already RSSI_SEL_HIGH. All DAC operations return ERR. */
 
 typedef struct {
+    BYTE chipid;   /* Owning chip of the DAC (CHIP_ID_xxx); CHIP_ID_MCU for on-chip MCU DACs. */
     BYTE id;
     BYTE channel;
 }DacForm_t;

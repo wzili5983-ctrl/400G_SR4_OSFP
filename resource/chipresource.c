@@ -32,10 +32,6 @@
 *******************************************************************************/
 #include "chipresource.h"
 
-VOID ChipRegister(VOID)
-{ /* Static immutable resource table. */
-}
-
 DWORD WriteChip(BYTE chipid, DWORD addr, DWORD data)
 {
     CONST ChipInfo_t *info = GetChipInfoById(chipid);

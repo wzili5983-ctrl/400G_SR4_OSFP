@@ -11,12 +11,22 @@ DWORD InitBus(BYTE id)
     return info != NULL && info->busops.BusInit != NULL ? info->busops.BusInit(id) : ERR;
 }
 
-DWORD TransferBus(BYTE id, BYTE address7, CONST BYTE *tx, BYTE txlen, BYTE *rx, BYTE rxlen)
+DWORD WriteBus(BYTE id, CONST BYTE *tx, BYTE txlen)
 {
     CONST BusInfo_t *info = GetBusInfo(id);
-    /* The implementation validates transfer arguments, including direct calls. */
-    if(info == NULL || info->busops.BusTransfer == NULL) {
+    /* The transfer address comes from the bus config (i2c.i2caddr); the
+     * implementation validates transfer arguments, including direct calls. */
+    if(info == NULL || info->busops.BusWrite == NULL) {
         return ERR;
     }
-    return info->busops.BusTransfer(id, address7, tx, txlen, rx, rxlen);
+    return info->busops.BusWrite(&info->bustotalform, tx, txlen);
+}
+
+DWORD ReadBus(BYTE id, BYTE *rx, BYTE rxlen)
+{
+    CONST BusInfo_t *info = GetBusInfo(id);
+    if(info == NULL || info->busops.BusRead == NULL) {
+        return ERR;
+    }
+    return info->busops.BusRead(&info->bustotalform, rx, rxlen);
 }

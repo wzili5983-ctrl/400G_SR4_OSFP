@@ -32,6 +32,9 @@
 *******************************************************************************/
 #include "adcresource.h"
 
+/* All board ADC channels use a 2.5V reference; formerly per-entry AdcForm_t.reference_mv. */
+#define ADC_REFERENCE_MV 2500U
+
 DWORD ReadAdc(BYTE id, DWORD *value)
 {
     CONST AdcInfo_t *info = GetAdcInfo(id);
@@ -61,6 +64,6 @@ DWORD ReadAdcMillivolts(BYTE id, DWORD *value)
     if(info == NULL || value == NULL || ReadAdc(id, &raw) != OK) {
         return ERR;
     }
-    *value = (raw * info->adcform.reference_mv + 2047U) / 4095U;
+    *value = (raw * ADC_REFERENCE_MV + 2047U) / 4095U;
     return OK;
 }

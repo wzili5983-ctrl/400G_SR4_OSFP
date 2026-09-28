@@ -1,6 +1,13 @@
 ./objects/busresource_impl.o: ..\resource_impl\busresource_impl.c \
   ..\resource_impl\busresource_impl.h ..\common\basedef.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdbool.h \
   ..\driver\mcu\system\gd32e511_512.h ..\driver\mcu\core\core_cm33.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_version.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_compiler.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_armclang.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\arm_acle.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\m-profile\cmsis_armclang_m.h \
   ..\driver\mcu\system\system_gd32e511_512.h \
   ..\driver\mcu\system\gd32e511_512_libopt.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_adc.h \
@@ -27,6 +34,5 @@
   ..\driver\mcu\peripheral\include\gd32e511_512_timer.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_usart.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_wwdgt.h \
-  ..\driver\projectfiles\inc\bcm_gd32_i2c.h \
-  ..\driver\projectfiles\inc\bcm_arm_platform.h \
-  ..\driver\odsp\projectfiles\inc\hr_time.h
+  ..\resource\gpioresource.h ..\resource_impl\gpioresource_impl.h \
+  ..\driver\mcu\adpat\inc\mcu_i2c.h ..\driver\mcu\adpat\inc\mcu_spi.h

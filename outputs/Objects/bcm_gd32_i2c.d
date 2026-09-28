@@ -1,5 +1,11 @@
 ./objects/bcm_gd32_i2c.o: ..\driver\projectfiles\src\bcm_gd32_i2c.c \
   ..\driver\mcu\system\gd32e511_512.h ..\driver\mcu\core\core_cm33.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_version.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_compiler.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\cmsis_armclang.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\arm_acle.h \
+  C:\Users\86177\Desktop\project\400G_SR4_OSFP\driver\mcu\core\m-profile\cmsis_armclang_m.h \
   ..\driver\mcu\system\system_gd32e511_512.h \
   ..\driver\mcu\system\gd32e511_512_libopt.h \
   ..\driver\mcu\peripheral\include\gd32e511_512_adc.h \
@@ -28,5 +34,7 @@
   ..\driver\mcu\peripheral\include\gd32e511_512_wwdgt.h \
   ..\driver\projectfiles\inc\bcm_gd32_i2c.h \
   ..\driver\projectfiles\inc\bcm_arm_platform.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stddef.h \
   ..\driver\projectfiles\inc\bcm_bsc.h \
-  ..\driver\odsp\projectfiles\inc\hr_time.h
+  ..\driver\odsp\projectfiles\inc\hr_time.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\string.h

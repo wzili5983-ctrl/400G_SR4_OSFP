@@ -1,7 +1,10 @@
 ./objects/host_diag_util.o: ..\driver\projectfiles\src\host_diag_util.c \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdio.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdlib.h \
   ..\driver\odsp\projectfiles\access.h \
   ..\driver\odsp\projectfiles\inc\reg_access.h \
   ..\driver\odsp\projectfiles\type_defns.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
   ..\driver\odsp\projectfiles\logger.h \
   ..\driver\odsp\projectfiles\inc\hr_time.h \
   ..\driver\odsp\projectfiles\fw_gp_reg_map.h \

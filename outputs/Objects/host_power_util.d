@@ -1,9 +1,11 @@
 ./objects/host_power_util.o: ..\driver\projectfiles\src\host_power_util.c \
   ..\driver\odsp\projectfiles\inc\hr_time.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
   ..\driver\odsp\projectfiles\access.h \
   ..\driver\odsp\projectfiles\inc\reg_access.h \
   ..\driver\odsp\projectfiles\type_defns.h \
   ..\driver\odsp\projectfiles\logger.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdio.h \
   ..\driver\odsp\projectfiles\common_def.h \
   ..\driver\odsp\projectfiles\regs_common.h \
   ..\driver\odsp\projectfiles\hercules_regs.h \

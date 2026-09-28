@@ -31,6 +31,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 #include "gpioresource_impl.h"
+#include "chipresource_impl.h"
 #include "gd32e511_512.h"
 
 STATIC DWORD BoardGpioWrite(BYTE id, DWORD value);
@@ -40,23 +41,23 @@ STATIC DWORD BoardGpioInit(BYTE id, BYTE rsttype);
 STATIC BOOL g_Ready[GPIO_ID_NUM];
 
 STATIC CONST GpioInfo_t g_GpioInfoImpl[GPIO_ID_NUM] = {
-    {{GPIO_ID_M_INT, GPIOB, GPIO_PIN_3, 1, 1, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_LPMODE, GPIOC, GPIO_PIN_6, 0, 0, 1, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_RSSI_SEL_HIGH, GPIOA, GPIO_PIN_5, 1, 0, 1, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_V3P3_RAIL_EN, GPIOA, GPIO_PIN_9, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_V3P3_PHY_EN, GPIOA, GPIO_PIN_10, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_V1P8_EN, GPIOA, GPIO_PIN_11, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_V1P8_PG, GPIOA, GPIO_PIN_12, 0, 0, 0, 1}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_I2C_SEL_PHY, GPIOA, GPIO_PIN_15, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_CDR_LD_EN, GPIOB, GPIO_PIN_11, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_WDOG_RST, GPIOB, GPIO_PIN_12, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_RX_RST_HIGH, GPIOC, GPIO_PIN_9, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_RESETL, GPIOC, GPIO_PIN_10, 0, 0, 1, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_RX_TIA_LOS_HIGH, GPIOC, GPIO_PIN_12, 0, 0, 0, 1}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_RESET_PHY, GPIOD, GPIO_PIN_4, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_LPMODE_PHY, GPIOD, GPIO_PIN_6, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_OPRXLOS_PHY_HIGH, GPIOD, GPIO_PIN_8, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{GPIO_ID_LASI_PHY, GPIOE, GPIO_PIN_7, 0, 0, 0, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_M_INT, GPIOB, GPIO_PIN_3, 1, 1, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_LPMODE, GPIOC, GPIO_PIN_6, 0, 0, 1, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RSSI_SEL_HIGH, GPIOA, GPIO_PIN_5, 1, 0, 1, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_V3P3_RAIL_EN, GPIOA, GPIO_PIN_9, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_V3P3_PHY_EN, GPIOA, GPIO_PIN_10, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_V1P8_EN, GPIOA, GPIO_PIN_11, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_V1P8_PG, GPIOA, GPIO_PIN_12, 0, 0, 0, 1}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_I2C_SEL_PHY, GPIOA, GPIO_PIN_15, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_CDR_LD_EN, GPIOB, GPIO_PIN_11, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_WDOG_RST, GPIOB, GPIO_PIN_12, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RX_RST_HIGH, GPIOC, GPIO_PIN_9, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RESETL, GPIOC, GPIO_PIN_10, 0, 0, 1, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RX_TIA_LOS_HIGH, GPIOC, GPIO_PIN_12, 0, 0, 0, 1}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RESET_PHY, GPIOD, GPIO_PIN_4, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_LPMODE_PHY, GPIOD, GPIO_PIN_6, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_OPRXLOS_PHY_HIGH, GPIOD, GPIO_PIN_8, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_LASI_PHY, GPIOE, GPIO_PIN_7, 0, 0, 0, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
 };
 
 CONST GpioInfo_t *GetGpioInfo(BYTE id)

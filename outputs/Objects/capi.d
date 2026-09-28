@@ -1,10 +1,12 @@
 ./objects/capi.o: ..\driver\odsp\projectfiles\src\capi.c \
   ..\driver\odsp\projectfiles\inc\hr_time.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdint.h \
   ..\driver\odsp\projectfiles\chip_config_def.h \
   ..\driver\odsp\projectfiles\access.h \
   ..\driver\odsp\projectfiles\inc\reg_access.h \
   ..\driver\odsp\projectfiles\type_defns.h \
   ..\driver\odsp\projectfiles\logger.h \
+  C:\Keil_v5\Arm\ARMCLANG\include\stdio.h \
   ..\driver\odsp\projectfiles\whole_image_sram.h \
   ..\driver\odsp\projectfiles\whole_image_spi.h \
   ..\driver\odsp\projectfiles\regs_common.h \
