@@ -32,6 +32,7 @@
 *******************************************************************************/
 #include "adcresource_impl.h"
 #include "chipresource_impl.h"
+#include "gpioresource_impl.h"
 #include "gd32e511_512.h"
 #include "mcu_clock.h"
 #include "timer2_scheduler.h"
@@ -85,12 +86,36 @@ STATIC CONST AdcPin_t g_AdcPinImpl[ADC_ID_NUM] = {
 /* DMA circular buffer: round 0 of all ADC_ID_NUM channels, then round 1, ... */
 STATIC volatile WORD g_AdSampleRawValues[ADC_ID_NUM * SAMPLE_TIMES];
 /* Median-mean filtered result per ADC ID, updated by the filter tasks. */
-STATIC WORD g_AdSampleFilttedValues[ADC_ID_NUM];
-STATIC Timer2TaskId_t g_AdcTaskIds[TASK_ID_NUM];
+STATIC WORD g_AdSampleFilttedValues[ADC_MSA_ID_NUM];
+/* 任务槽位统一存调度器集中表 g_TaskIds[TASK_ID_*]（timer2_scheduler.h）。 */
 
 CONST AdcInfo_t *GetAdcInfo(BYTE id)
 {
     return id < ADC_ID_NUM ? &g_AdcInfoImpl[id] : NULL;
+}
+
+/* 读出指定 AdcMsaId_t 槽的滤波值——MAL 监视任务按 g_StdPerfMon[].adindex
+ * 消费本接口（adindex 取值空间 = AdcMsaId_t）。ADC 未初始化完成或 id
+ * 非法时返回 ERR。 */
+DWORD GetAdcMsaFilteredValue(BYTE msaId, WORD *value)
+{
+    if(msaId >= ADC_MSA_ID_NUM || value == NULL || !g_AdcReady) {
+        return ERR;
+    }
+    *value = g_AdSampleFilttedValues[msaId];
+    return OK;
+}
+
+/* 写 AdcMsaId_t 槽：GN1848 监视任务（driver/drv TaskTxAdSamples）等
+ * 非 MCU-ADC 源的落槽入口；仅界检查，不依赖 g_AdcReady（TX 采集与
+ * MCU ADC 初始化互相独立）。 */
+DWORD SetAdcMsaFilteredValue(BYTE msaId, WORD value)
+{
+    if(msaId >= ADC_MSA_ID_NUM) {
+        return ERR;
+    }
+    g_AdSampleFilttedValues[msaId] = value;
+    return OK;
 }
 
 STATIC DWORD WaitCalibration(DWORD mask)
@@ -137,16 +162,39 @@ STATIC VOID TaskBaseAdSamples(VOID *arg)
     BYTE id;
     (void)arg;
     for(id = ADC_ID_CURRENT_MAIN; id < ADC_ID_NUM; ++id) {
-        g_AdSampleFilttedValues[id] = AdSampleMedianMeanFilter(id);
+        g_AdSampleFilttedValues[ADC_MSA_ID_CURRENT_MAIN + (id - ADC_ID_CURRENT_MAIN)] = AdSampleMedianMeanFilter(id);
     }
 }
 
-/* Filter the two RSSI channels; period 100 ms. */
+/* Filter the two RSSI channels; period 100 ms.
+ * ADC_ID_RSSI01/23_HIGH 两路经 GPIO_ID_RSSI_SEL_HIGH 模拟开关复用 4 路 TIA RSSI：
+ *   SEL=HIGH：RSSI01→TIA RSSI0，RSSI23→TIA RSSI3
+ *   SEL=LOW ：RSSI01→TIA RSSI1，RSSI23→TIA RSSI2
+ * 每次运行先按当前开关相位滤波落槽，再翻转开关供下次运行采另一相——
+ * 100ms 任务间隔 >> DMA 整缓冲刷新时间（10 通道×6 轮，约 1ms），采样时
+ * 缓冲已全为当前相位样本，无需额外 settle 等待；每个 RSSI 槽 200ms 刷新。
+ * 上电 default_level=1（HIGH），首个周期采 RSSI0/RSSI3。
+ * 电平读失败（GPIO 未初始化）本轮放弃并返回，待板级初始化补齐自动恢复；
+ * 写翻转失败则相位不再交替，只有当前相位的两个槽有更新（降级可观察）。 */
 STATIC VOID TaskRssiAdSamples(VOID *arg)
 {
+    CONST GpioInfo_t *sel = GetGpioInfo(GPIO_ID_RSSI_SEL_HIGH);
+    DWORD level = IO_LOW;
     (void)arg;
-    g_AdSampleFilttedValues[ADC_ID_RSSI01_HIGH] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
-    g_AdSampleFilttedValues[ADC_ID_RSSI23_HIGH] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
+    if(sel == NULL || sel->gpioops.GpioRead == NULL ||
+       sel->gpioops.GpioRead(GPIO_ID_RSSI_SEL_HIGH, &level) != OK) {
+        return;
+    }
+    if(level == IO_HIGH) {
+        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI0] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
+        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI3] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
+    } else {
+        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI1] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
+        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI2] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
+    }
+    if(sel->gpioops.GpioWrite != NULL) {
+        sel->gpioops.GpioWrite(GPIO_ID_RSSI_SEL_HIGH, (level == IO_HIGH) ? IO_LOW : IO_HIGH);
+    }
 }
 
 STATIC DWORD BoardAdcInit(BYTE id, BYTE rsttype)
@@ -201,9 +249,11 @@ STATIC DWORD BoardAdcInit(BYTE id, BYTE rsttype)
         adc_dma_mode_enable(ADC0, ADC_ROUTINE_CHANNEL);
         adc_software_trigger_enable(ADC0, ADC_ROUTINE_CHANNEL);
         /* Scheduler tick is 1 ms: first run 100 ms after init, then base housekeeping
-         * filter every 400 ms, RSSI filter every 100 ms, both forever. */
-        g_AdcTaskIds[TASK_ID_BASE_AD_SAMPLES] = Timer2SchedulerAdd(TaskBaseAdSamples, NULL, 100U, 400U, TIMER2_TASK_FOREVER);
-        g_AdcTaskIds[TASK_ID_RSSI_AD_SAMPLES] = Timer2SchedulerAdd(TaskRssiAdSamples, NULL, 100U, 100U, TIMER2_TASK_FOREVER);
+         * filter every 400 ms and RSSI filter every 100 ms, both forever.
+         * GN1848 monitor collection (TaskTxAdSamples, 1 s) is registered by
+         * InitDrv in driver/drv. */
+        g_TaskIds[TASK_ID_BASE_AD_SAMPLES] = Timer2SchedulerAdd(TaskBaseAdSamples, NULL, 100U, 400U, TIMER2_TASK_FOREVER);
+        g_TaskIds[TASK_ID_RSSI_AD_SAMPLES] = Timer2SchedulerAdd(TaskRssiAdSamples, NULL, 100U, 100U, TIMER2_TASK_FOREVER);
         g_AdcReady = TRUE;
     }
     g_PinReady[id] = TRUE;

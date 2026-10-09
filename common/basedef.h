@@ -66,7 +66,7 @@ typedef void                       VOID;
 #define IO_LOW   0
 #define IO_HIGH  1
 
-#define MAX_UIN16_VALUE 0XFFFF
+#define MAX_UIT16_VALUE 0XFFFF
 
 #define SETBIT(x,i)  ((x) |= 1 << (i))
 #define CLRBIT(x,i)  ((x) &= ~(1 << (i)))
@@ -74,13 +74,13 @@ typedef void                       VOID;
 #define SWAP16(x)   ((x) >> 8 | (x) << 8)
 
 
-#define MAKEWORD(l, h)   (UIN16)(((UIN16)(h)<<8) | (l))
+#define MAKEWORD(l, h)   (UIT16)(((UIT16)(h)<<8) | (l))
 #define GETWORDB(p,i)  MAKEWORD(p[i+1], p[i])
 
 #define WORD2BIG(p, x)   *p = (x) >> 8; \
 					  *(p+1) = (x)&0xff;
 
-#define GETDWORDB(p, i) 	(UIN32)((p[i +3]) | (p[i+2] << 8) | (p[i+1] << 16) | (p[i] << 24))
+#define GETDWORDB(p, i) 	(UIT32)((p[i +3]) | (p[i+2] << 8) | (p[i+1] << 16) | (p[i] << 24))
 
 #define DWORD2BIG(p, x)   *p = (x) >> 24; \
 					  *(p+1) = (x) >> 16; \
@@ -90,5 +90,24 @@ typedef void                       VOID;
 #define FLOAT2INT(x)   (INT)(((x) > 0.0f) ? ((x) + 0.5f ) :((x) - 0.5f ))
 
 #define DWORD2FLOAT(x)   (*(FLOAT*)(&(x)))
+
+typedef enum {
+	BIT0=0,
+	BIT1,
+	BIT2,
+	BIT3,
+	BIT4,
+	BIT5,
+	BIT6,
+	BIT7,
+	BIT8,
+	BIT9,
+	BIT10,
+	BIT11,
+	BIT12,
+	BIT13,
+	BIT14,
+	BIT15
+} Bit_t;
 
 #endif

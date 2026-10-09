@@ -21,6 +21,10 @@ typedef struct {
 
 STATIC Timer2Task_t g_Tasks[TIMER2_SCHEDULER_MAX_TASKS];
 
+/* 任务槽位表（按 TASK_ID_* 索引，见头文件注记）：各模块注册任务时写入
+ * 返回的槽位，Init 时统一置 -1（未注册）。 */
+Timer2TaskId_t g_TaskIds[TASK_ID_NUM];
+
 STATIC BOOL Timer2TaskIdValid(Timer2TaskId_t id)
 {
     return id >= 0 && id < (Timer2TaskId_t)TIMER2_SCHEDULER_MAX_TASKS && g_Tasks[id].used;
@@ -36,6 +40,10 @@ VOID Timer2SchedulerInit(DWORD timer_clock_hz, DWORD tick_hz)
 
     for (DWORD index = 0U; index < TIMER2_SCHEDULER_MAX_TASKS; ++index) {
         g_Tasks[index] = (Timer2Task_t){0};
+    }
+    /* 槽位表一并重置：各模块须在 Init 之后注册任务（本就如此）。 */
+    for (DWORD index = 0U; index < (DWORD)TASK_ID_NUM; ++index) {
+        g_TaskIds[index] = (Timer2TaskId_t)-1;
     }
 
     rcu_periph_clock_enable(RCU_TIMER2);

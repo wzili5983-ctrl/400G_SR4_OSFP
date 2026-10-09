@@ -48,6 +48,12 @@ BYTE DtTabCtrlGetPage(VOID);
 /* 当前 bank 0-3（BankSelect 低 2 位）。 */
 BYTE DtTabCtrlGetBank(VOID);
 
+/* 当前 Upper 半区页表索引：g_DtTabCtrl（page+bank）的解析结果，读相位快照
+ * 按它取页。ISR（DtTabCtrlSet）写、主循环可读，故 volatile。
+ * 值为 (TabIndex_t)PAGE_TAB_NUM 表示选中页未登记（Upper 读回 dummy）。
+ * 初始未刷新前即为哨兵；DtTabCtrlInit 后随默认上下文解析（= Page 00h）。 */
+extern volatile TabIndex_t g_CurPageId;
+
 /* 指令解析：按当前窗口地址 memaddr(00h-FFh) 定位寄存器属性。
  * 1) bit7=0（00h-7Fh，Lower 半区）→ Page Low：g_OsfpTabForm[0] 固定直取
  *    （不参与二分，bank 不影响索引；per-bank 的 Flags Summary 属表内数据）；
@@ -62,5 +68,46 @@ BYTE DtTabCtrlGetBank(VOID);
  * 返回匹配的属性项指针；未命中（页未登记/Reserved/Custom 区）返回
  * NULL，由调用方按默认处理。表元素数约定 == TabIndex_t 的 PAGE_TAB_NUM。 */
 CONST OsfpRegAttr_t *DtParse(BYTE memaddr);
+
+/* 指令解析帧回调（I2C1 EV STPDET 中断内执行，I2cSlaveInit 已默认接线）：
+ * 按帧首地址 g_RxBuf[I2C_RX_ADDR] 经 DtParseForm 定位寄存器（内部用
+ * g_DtTabCtrl 选页/ bank）后路由——
+ *   RO / RO_COR 写   → 丢弃（CMIS：RO 写无效果）；
+ *   oprfunc != NULL  → 特殊行为寄存器，按 opftype 立即执行或压 deferred
+ *                      FIFO（126/127 页/ bank 切换、密码、复位触发）；
+ *   纯存储 MEMT_SRAM → WriteProtocolMsaSpace 写影子，支持同 memtype 顺序
+ *                      写（跨 128B 半页 / 尾字节异质区丢弃）；
+ *   MEMT_FLASH/NONE  → 不落存储（Flash 持久化归线程 dirty 队列）。
+ * 无写数据 / 页未登记 / Reserved 区直接返回。 */
+VOID DtFrameCb(DWORD frame_bytes);
+
+/* 读相位页快照数据源：注册到 I2cSlaveRegisterReadSource（I2cSlaveInit 已
+ * 默认接线），读相位 ADDSEND+TR 时 I2C1 EV ISR 内调用。按 memaddr bit7
+ * 选影子槽（0→Page Low，1→g_CurPageId，哨兵→0xFF dummy），从 memaddr 起
+ * 半区内回卷轮转填充 128B。统一走 SRAM 影子（MEMT_FLASH 页依赖启动镜像）。
+ * 纯 SRAM 拷贝，ISR 安全。 */
+VOID DtReadSource(BYTE memaddr, BYTE *buf, DWORD len);
+
+/* COR（Clear-On-Read）寄存器读后清除：STPDET 时经 I2cSlaveRegisterReadDone
+ * 调用（I2cSlaveInit 已默认接线），I2C1 EV ISR 上下文。清除环形读区间
+ * [memaddr, memaddr+rdlen)（mod 128 半页）覆盖到的 ACC_RO_COR 影子字节——
+ * 只清 host 实际读过的字节（精确 COR；rdlen 由调用侧饱和到 128）。
+ * 半区/页定位规则与 DtReadSource 相同。并发契约：影子字节单写原子；
+ * app 层对 COR 字节的置位 RMW 须 BASEPRI 锁内（docs/memory_map.md 三写者
+ * 模型），否则与清零交错丢更新。末字节 TI 到 STPDET 的 µs 窗口内新锁存
+ * 事件会被一并清掉（概率性单事件丢失，bring-up 可接受）。 */
+VOID DtCorClear(BYTE memaddr, BYTE rdlen);
+
+/* deferred 操作 FIFO（深度 8）：ISR 压入，主循环轮询执行。
+ * DtDeferredPush 由 DtFrameCb（ISR）压入 oprfunc + 入参副本，满则丢弃返回 ERR；
+ * DtDeferredPoll 由主循环取一个执行（1=执行了，0=空）；DtDeferredCount 待处理数。 */
+DWORD DtDeferredPush(OprateFunc func, CONST BYTE *cmd, BYTE len);
+DWORD DtDeferredPoll(VOID);
+DWORD DtDeferredCount(VOID);
+
+/* 后台指令执行服务：主循环每轮调用。把 deferred FIFO 里待处理的 oprfunc
+ * 逐项执行至清空。仅在主循环线程上下文运行——deferred oprfunc 允许阻塞
+ * （Flash/NV 写），这是 OPF_DEFERRED 与 OPF_IMMEDIATE 的分界。 */
+VOID CmdExeBackground(VOID);
 
 #endif

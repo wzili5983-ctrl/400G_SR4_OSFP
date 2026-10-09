@@ -151,7 +151,66 @@ typedef enum {
     PAGE_ID_A1H_1,
     PAGE_ID_A1H_2,
     PAGE_ID_A1H_3,
-
+    PAGE_ID_A2H_0,
+    PAGE_ID_A2H_1,
+    PAGE_ID_A2H_2,
+    PAGE_ID_A2H_3,
+    PAGE_ID_A3H_0,
+    PAGE_ID_A3H_1,
+    PAGE_ID_A3H_2,
+    PAGE_ID_A3H_3,
+    PAGE_ID_A4H_0,
+    PAGE_ID_A4H_1,
+    PAGE_ID_A4H_2,
+    PAGE_ID_A4H_3,
+    PAGE_ID_A5H_0,
+    PAGE_ID_A5H_1,
+    PAGE_ID_A5H_2,
+    PAGE_ID_A5H_3,
+    PAGE_ID_A6H_0,
+    PAGE_ID_A6H_1,
+    PAGE_ID_A6H_2,
+    PAGE_ID_A6H_3,
+    PAGE_ID_A7H_0,
+    PAGE_ID_A7H_1,
+    PAGE_ID_A7H_2,
+    PAGE_ID_A7H_3,
+    PAGE_ID_A8H_0,
+    PAGE_ID_A8H_1,
+    PAGE_ID_A8H_2,
+    PAGE_ID_A8H_3,
+    PAGE_ID_A9H_0,
+    PAGE_ID_A9H_1,
+    PAGE_ID_A9H_2,
+    PAGE_ID_A9H_3,
+    PAGE_ID_AAH_0,
+    PAGE_ID_AAH_1,
+    PAGE_ID_AAH_2,
+    PAGE_ID_AAH_3,
+    PAGE_ID_ABH_0,
+    PAGE_ID_ABH_1,
+    PAGE_ID_ABH_2,
+    PAGE_ID_ABH_3,
+    PAGE_ID_ACH_0,
+    PAGE_ID_ACH_1,
+    PAGE_ID_ACH_2,
+    PAGE_ID_ACH_3,
+    PAGE_ID_ADH_0,
+    PAGE_ID_ADH_1,
+    PAGE_ID_ADH_2,
+    PAGE_ID_ADH_3,
+    PAGE_ID_AEH_0,
+    PAGE_ID_AEH_1,
+    PAGE_ID_AEH_2,
+    PAGE_ID_AEH_3,
+    PAGE_ID_AFH_0,
+    PAGE_ID_AFH_1,
+    PAGE_ID_AFH_2,
+    PAGE_ID_AFH_3,
+    PAGE_ID_B0H,            // 存放模块级校正参数K和B MON_TYPE_TEMP~MON_TYPE_CUSTOM (8B*6)
+    PAGE_ID_B1H,            // 存放lane级校正参数K和B MON_TYPE_OPTPWR_TX~MON_TYPE_LASER_BIAS (8B*8+8B*8)
+    PAGE_ID_B2H,            // 存放lane级校正参数K和B MON_TYPE_OPTPWR_RX ((8B+16B)*4)
+    PAGE_ID_B3H,            // 预留：RxPwr 扩展通道系数页（ch4-7）
     PAGE_TAB_NUM
 } TabIndex_t;
 
@@ -172,13 +231,25 @@ typedef enum {
  * len=字节数；返回 OK/ERR。NULL=纯存储，引擎直读直写。 */
 typedef DWORD (*OprateFunc)(BYTE* cmd, BYTE len);
 
+/*-------------------- oprfunc 运行类型（OsfpRegAttr_t.opftype，互斥取值） --------------------
+ * 标注 oprfunc 的执行上下文/时机，供 RAL 引擎决定在何处触发回调：
+ *   OPF_NONE      无 oprfunc（oprfunc == NULL），纯存储，引擎直读直写；
+ *   OPF_IMMEDIATE 立即操作型：回调运行时间短、无阻塞副作用（不碰 Flash/XIP、
+ *                 无 ms 级等待、不加锁），可在 ISR 或引擎写路径中同步执行；
+ *   OPF_DEFERRED  间接操作型：置标志位，下沉主循环（线程上下文）执行——
+ *                 用于 Flash 擦写、长延时、需访问共享资源/持锁的操作。 */
+#define OPF_NONE       0x00U
+#define OPF_IMMEDIATE  0x01U
+#define OPF_DEFERRED   0x02U
+
 /* 寄存器区域描述（页表元素） */
 typedef struct {
     BYTE offset;        /* 页内偏移地址：Lower/Upper 均为 00h-7Fh；Upper 的宿主窗口地址 bit7 由 MCI 半区选择时剥离（DtParse 用 memaddr & 0x7F 查找） */
     BYTE size;          /* 寄存器长度（字节），如 LOW_ADDR_TEMP_MON=2 */
     BYTE acctype;       /* 访问类型：Table 8-3 的 ACCESS TYPE（ACC_*） */
     BYTE memtype;       /* 数据存储地（MEMT_*） */
-    OprateFunc oprfunc; /* 读写该寄存器触发的回调 */
+    OprateFunc oprfunc; /* 读写该寄存器触发的回调；NULL=纯存储 */
+    BYTE opftype;       /* oprfunc 运行类型（OPF_*）；oprfunc==NULL 时恒 OPF_NONE */
 } OsfpRegAttr_t;
 
 /* 每个 page 的结构体：页号 + bank 属性 + 本页寄存器属性表（页表索引元素） */
@@ -194,6 +265,8 @@ typedef struct {
 extern CONST OsfpTabForm_t g_OsfpTabForm[];      /* 页表索引：页号 -> 本页寄存器属性表 */
 extern CONST OsfpRegAttr_t g_OsfpInfPageLow[]; /* Page Low 寄存器属性表，见 ral.c */
 extern CONST OsfpRegAttr_t g_OsfpInfPage00H[]; /* Page 00h 寄存器属性表（CMIS 5.3 Table 8-26~8-41），见 ral.c */
+extern CONST OsfpRegAttr_t g_OsfpInfPage01H[]; /* Page 01h 寄存器属性表（CMIS 5.3 §8.4 Table 8-42~8-60），见 ral.c */
+extern CONST OsfpRegAttr_t g_OsfpInfPage02H[]; /* Page 02h 寄存器属性表（CMIS 5.3 §8.5 Table 8-61~8-63），见 ral.c */
 
 /*-------------------- Lower Memory Byte 定义（CMIS 5.3 Table 8-5 ~ 8-25） --------------------*/
 /* Byte 0-2: Management Characteristics */
@@ -290,7 +363,8 @@ extern CONST OsfpRegAttr_t g_OsfpInfPage00H[]; /* Page 00h 寄存器属性表（
 /* Byte 118-127: Password / Page Mapping */
 #define LOW_ADDR_PASSWORD_CHANGE        0x76U   /* 0x76-0x79 U32 大端 WO/SC */
 #define LOW_ADDR_PASSWORD_ENTRY         0x7AU   /* 0x7A-0x7D U32 大端 WO/SC; 出厂主机密码 0000_1011h */
-#define LOW_ADDR_BANK_SELECT            0x7EU   /* RWW BankSelect; 与 PageSelect 同一次 WRITE */
-#define LOW_ADDR_PAGE_SELECT            0x7FU   /* RWW PageSelect; 写不支持页模块自清零回 Page 00h */
+#define LOW_ADDR_BANK_PAGE_SELECT       0x7EU   /* RWW 合并域 0x7E-0x7F（2B）：cmd[0]=BankSelect cmd[1]=PageSelect，须同一次 WRITE */
+#define LOW_ADDR_BANK_SELECT            0x7EU   /* RWW BankSelect（合并域低字节） */
+#define LOW_ADDR_PAGE_SELECT            0x7FU   /* RWW PageSelect（合并域高字节）；写不支持页模块自清零回 Page 00h */
 
 #endif // RAL_H

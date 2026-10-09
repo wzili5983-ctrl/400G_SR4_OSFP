@@ -1,0 +1,9 @@
+# µVision / Keil 构建产物（工程文件 *.uvprojx 保留版本控制）
+outputs/
+projects/Objects/
+projects/Listings/
+*.uvoptx
+*.uvguix.*
+projects/build_log.txt
+projects/build_result.log
+projects/flash_build_log.txt
