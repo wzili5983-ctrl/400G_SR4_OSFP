@@ -1,11 +1,11 @@
 {
   "company": "Terabitcom",
   "hdver": "HF2026090614",
-  "flash_id": "FLASH_ID_APP_A",
+  "flash_type": "FLASH_TYPE_APP",
   "store_addr": "0x08010000",
   "swver": "SW2026092614",
   "modulename": "400G-SR4-OSFP-V1",
-  "fwsize": 16440,
-  "crc32data": "0xA9D12C25",
-  "crc32hdr": "0xC64B0AF1"
+  "fwsize": 147608,
+  "crc32data": "0x1769483D",
+  "crc32hdr": "0x136EFF1D"
 }

@@ -41,23 +41,36 @@ STATIC DWORD BoardGpioInit(BYTE id, BYTE rsttype);
 STATIC BOOL g_Ready[GPIO_ID_NUM];
 
 STATIC CONST GpioInfo_t g_GpioInfoImpl[GPIO_ID_NUM] = {
-    {{CHIP_ID_MCU, GPIO_ID_M_INT, GPIOB, GPIO_PIN_3, 1, 1, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_LPMODE, GPIOC, GPIO_PIN_6, 0, 0, 1, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_RSSI_SEL_HIGH, GPIOA, GPIO_PIN_5, 1, 0, 1, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_V3P3_RAIL_EN, GPIOA, GPIO_PIN_9, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_V3P3_PHY_EN, GPIOA, GPIO_PIN_10, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_V1P8_EN, GPIOA, GPIO_PIN_11, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_V1P8_PG, GPIOA, GPIO_PIN_12, 0, 0, 0, 1}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_I2C_SEL_PHY, GPIOA, GPIO_PIN_15, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_CDR_LD_EN, GPIOB, GPIO_PIN_11, 1, 0, 0, 1}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_WDOG_RST, GPIOB, GPIO_PIN_12, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_RX_RST_HIGH, GPIOC, GPIO_PIN_9, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_RESETL, GPIOC, GPIO_PIN_10, 0, 0, 1, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_RX_TIA_LOS_HIGH, GPIOC, GPIO_PIN_12, 0, 0, 0, 1}, {NULL, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_RESET_PHY, GPIOD, GPIO_PIN_4, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_LPMODE_PHY, GPIOD, GPIO_PIN_6, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_OPRXLOS_PHY_HIGH, GPIOD, GPIO_PIN_8, 1, 0, 1, 0}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
-    {{CHIP_ID_MCU, GPIO_ID_LASI_PHY, GPIOE, GPIO_PIN_7, 0, 0, 0, 0}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_M_INT, GPIOB, GPIO_PIN_3, GPIO_DIR_OUTPUT, GPIO_OPENDRAIN, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_LPMODE, GPIOC, GPIO_PIN_6, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RSSI_SEL_HIGH, GPIOA, GPIO_PIN_5, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    /* 3.3V_Rail load switch (TPS22964 U5) enable, input = 3.3V_M (U3 out);
+     * feeds TIA VCC + DRV VCC/VCCIO (2026-10-12 power chain 3). */
+    {{CHIP_ID_MCU, GPIO_ID_V3P3_RAIL_EN, GPIOA, GPIO_PIN_9, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    /* U4 MP5087 enable: produces 3.3V_PHY which feeds U21 (SY70300B) PVIN,
+     * so this pin is the master switch of the whole DSP core-rail chain
+     * (0.9V/0.75V/DVDD_AVS) — cutting U4 kills U21 input (2026-10-12 chain 5,
+     * second edition: was misrecorded as a U21 output gate). */
+    {{CHIP_ID_MCU, GPIO_ID_V3P3_PHY_EN, GPIOA, GPIO_PIN_10, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    /* DSP 1.8V domain switch: MPM3810 U6 buck enable, input = 3.3V_M (U3
+     * out); power-good is read back on GPIO_ID_V1P8_PG (2026-10-12 chain 2). */
+    {{CHIP_ID_MCU, GPIO_ID_V1P8_EN, GPIOA, GPIO_PIN_11, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_V1P8_PG, GPIOA, GPIO_PIN_12, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_I2C_SEL_PHY, GPIOA, GPIO_PIN_15, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_CDR_LD_EN, GPIOB, GPIO_PIN_11, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_WDOG_RST, GPIOB, GPIO_PIN_12, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RX_RST_HIGH, GPIOC, GPIO_PIN_9, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RESETL, GPIOC, GPIO_PIN_10, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RX_TIA_LOS_HIGH, GPIOC, GPIO_PIN_12, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_RESET_PHY, GPIOD, GPIO_PIN_4, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_LPMODE_PHY, GPIOD, GPIO_PIN_6, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_OPRXLOS_PHY_HIGH, GPIOD, GPIO_PIN_8, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {NULL, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_LASI_PHY, GPIOE, GPIO_PIN_7, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_LOW}, {NULL, BoardGpioRead, BoardGpioInit}},
+    /* Boost U2 enable (input = 3.3V_M from U3), single stage per power chain
+     * 1 (second edition): VCC_5V feeds TIA VPD + DRV VCC5 directly.
+     * Complements GPIO_ID_V3P3_RAIL_EN. */
+    {{CHIP_ID_MCU, GPIO_ID_5V_EN, GPIOA, GPIO_PIN_8, GPIO_DIR_OUTPUT, GPIO_PUSHPULL, GPIO_LEVEL_LOW, GPIO_LEVEL_HIGH}, {BoardGpioWrite, BoardGpioRead, BoardGpioInit}},
+    {{CHIP_ID_MCU, GPIO_ID_EXTFLASH_CS, GPIOG, GPIO_PIN_12, GPIO_DIR_INPUT, GPIO_PUSHPULL, GPIO_LEVEL_HIGH, GPIO_LEVEL_LOW}, {NULL, BoardGpioRead, BoardGpioInit}},
 };
 
 CONST GpioInfo_t *GetGpioInfo(BYTE id)
@@ -82,6 +95,12 @@ STATIC VOID EnablePort(DWORD port)
         break;
     case GPIOE:
         rcu_periph_clock_enable(RCU_GPIOE);
+        break;
+    case GPIOF:
+        rcu_periph_clock_enable(RCU_GPIOF);
+        break;
+    case GPIOG:
+        rcu_periph_clock_enable(RCU_GPIOG);
         break;
     default:
         break;

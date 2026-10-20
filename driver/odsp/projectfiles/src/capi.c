@@ -17,8 +17,21 @@
 #include "hr_time.h"
 #include "chip_config_def.h"
 #include "access.h"
+/* Built-in DSP firmware images (wholeimage_sram + wholeimage_spi) total
+ * ~520 KB of rodata — far beyond the module MCU flash budget, so the
+ * 400G_SR4_OSFP APP compiles WITHOUT them (the DSP boots from U15/SST25PF040C
+ * via the MCU SPI2 path instead). Define CAPI_COMPILE_IN_FW_IMAGE to restore
+ * the legacy {NULL,0} = "use the compiled-in image" default (host CLI use). */
+#if defined(CAPI_COMPILE_IN_FW_IMAGE)
 #include "whole_image_sram.h"
 #include "whole_image_spi.h"
+#else
+/* whole_image_spi.h also carried IMAGE_UPGRADE_CRC — the built-in image's CRC.
+ * No built-in image -> neutral placeholder: the hitless branch in
+ * capi_set_fw_download_info is unreachable in this APP (the CDB path rejects
+ * hitless upgrades) and host-supplied images must carry their own crc. */
+#define IMAGE_UPGRADE_CRC   0x00000000u
+#endif
 #include "regs_common.h"
 #include "chip_common_config_ind.h"
 #include "ipc_regs.h"
@@ -896,8 +909,13 @@ return_result_t capi_download(capi_phy_info_t*      phy_info_ptr,
     case CAPI_DOWNLOAD_MODE_MDIO_EEPROM:
     case CAPI_DOWNLOAD_MODE_I2C_EEPROM:
         if((download_info_ptr->image_info.image_ptr == NULL) || (download_info_ptr->image_info.image_size == 0)) {
+#if defined(CAPI_COMPILE_IN_FW_IMAGE)
              download_info_ptr->image_info.image_ptr=(uint32_t*) &wholeimage_spi[0];
              download_info_ptr->image_info.image_size=sizeof(wholeimage_spi);
+#else
+             CAPI_LOG_ERROR("capi_download: image_ptr==NULL but no built-in image (CAPI_COMPILE_IN_FW_IMAGE not defined)\n");
+             return RR_ERROR;
+#endif
         }
         if (download_info_ptr->spi_program_mode==CAPI_SPI_PROGRAM_FAST)
             ret = host_download_spi_internal_fast(phy_info_ptr, download_info_ptr);
@@ -917,9 +935,13 @@ return_result_t capi_download(capi_phy_info_t*      phy_info_ptr,
                                       PCR_RST_CTR_M0P0_SRST_EN_MASK);
 
         if((download_info_ptr->image_info.image_ptr == NULL) || (download_info_ptr->image_info.image_size==0)) {
+#if defined(CAPI_COMPILE_IN_FW_IMAGE)
             download_info_ptr->image_info.image_ptr=(uint32_t*) &wholeimage_sram[0];
             download_info_ptr->image_info.image_size=sizeof(wholeimage_sram);
-
+#else
+            CAPI_LOG_ERROR("capi_download: image_ptr==NULL but no built-in image (CAPI_COMPILE_IN_FW_IMAGE not defined)\n");
+            return RR_ERROR;
+#endif
         }
         if (download_info_ptr->sram_program_mode==CAPI_SRAM_PROGRAM_FAST)
             ret = host_download_sram_fast(phy_info_ptr, download_info_ptr);
@@ -1722,9 +1744,14 @@ return_result_t capi_set_fw_download_info(capi_phy_info_t* phy_info_ptr, capi_fw
     CAPI_LOG_FUNC("capi_set_fw_download_info", &capi_phy);
 
     if(fw_download_info_ptr->image.src_ptr == NULL || fw_download_info_ptr->image.size == 0) {
+#if defined(CAPI_COMPILE_IN_FW_IMAGE)
         fw_download_info_ptr->image.src_ptr = (uint32_t*) &wholeimage_spi[0];
         fw_download_info_ptr->image.size = sizeof(wholeimage_spi);
         CAPI_LOG_INFO("capi_set_fw_download_info: default wholeimage_spi and size are used!!!\n");
+#else
+        CAPI_LOG_ERROR("capi_set_fw_download_info: image.src_ptr==NULL but no built-in image (CAPI_COMPILE_IN_FW_IMAGE not defined)\n");
+        return RR_ERROR;
+#endif
     }
     switch (fw_download_info_ptr->memory_type) {
         case MEMORY_TYPE_FLASH_HITLESS:

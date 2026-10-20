@@ -1,0 +1,11 @@
+{
+  "company": "Terabitcom",
+  "hdver": "HF2026090614",
+  "flash_type": "FLASH_TYPE_PARAM",
+  "store_addr": "0x08074000",
+  "swver": "SW2026092614",
+  "modulename": "400G-SR4-OSFP-V1",
+  "fwsize": 128,
+  "crc32data": "0x48B92097",
+  "crc32hdr": "0xD67F3641"
+}

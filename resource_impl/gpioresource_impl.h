@@ -35,6 +35,16 @@
 
 #include "basedef.h"
 
+/* GpioForm_t 布尔成员取值——用宏代替裸 0/1，表驱动初始化处可读性更高 */
+#define GPIO_DIR_INPUT          0U   /* output 成员：输入 */
+#define GPIO_DIR_OUTPUT         1U   /* output 成员：输出 */
+
+#define GPIO_PUSHPULL           0U   /* open_drain 成员：推挽输出 */
+#define GPIO_OPENDRAIN          1U   /* open_drain 成员：开漏输出 */
+
+#define GPIO_LEVEL_LOW          0U   /* default_level / active_level：低电平 */
+#define GPIO_LEVEL_HIGH         1U   /* default_level / active_level：高电平 */
+
 typedef struct {
     BYTE chipid; /* Owning chip of the pin (CHIP_ID_xxx); CHIP_ID_MCU for on-chip MCU pins. */
     BYTE id;
@@ -72,6 +82,15 @@ typedef enum {
     GPIO_ID_LPMODE_PHY,
     GPIO_ID_OPRXLOS_PHY_HIGH,
     GPIO_ID_LASI_PHY,
+    GPIO_ID_5V_EN,
+    /* External SPI flash (U15, SST25PF040C 512KB SPI NOR, boots the DSP) chip
+     * select net: PG12, active low. Kept Hi-Z (input) here on purpose — the
+     * net is shared with the DSP SPI master (U11 boots from U15); the
+     * extflash driver turns it into an output only for the duration of its
+     * own bus sessions (2026-10-16). The bus-layer CS wrap in
+     * busresource_impl is not used by that driver (NOR needs command+data
+     * under one CS). */
+    GPIO_ID_EXTFLASH_CS,
     GPIO_ID_NUM
 }GpioId_t;
 

@@ -62,23 +62,25 @@ extern volatile TabIndex_t g_CurPageId;
  *    同为 0x00，半区才是二者的区分键），得 tab 最左匹配项；该项 banked=1
  *    时索引顺延 bank 得匹配项（越界返回 NULL），banked=0 时 CMIS 规定
  *    BankSelect 被忽略，不加偏移。
- * 2) 在匹配项的 OsfpRegAttr_t 表中按 offset 二分（offset = memaddr &
- *    0x7F 页内偏移；Upper 表 offset 成员也存 00h-7Fh，bit7 已被半区
- *    选择剥离）。
- * 返回匹配的属性项指针；未命中（页未登记/Reserved/Custom 区）返回
- * NULL，由调用方按默认处理。表元素数约定 == TabIndex_t 的 PAGE_TAB_NUM。 */
+ * 2) 在匹配项的 OsfpRegAttr_t 表中按区间包含二分 offset，得「含该 offset
+ *    的表项」（offset = memaddr & 0x7F 页内偏移；Upper 表 offset 成员也存
+ *    00h-7Fh，bit7 已被半区选择剥离）。inf 表须 offset 升序、区间互不重叠。
+ * 返回含该 offset 的属性项指针；未命中（页未登记/空隙/Reserved/Custom 区）
+ * 返回 NULL，由调用方按默认处理。表元素数约定 == TabIndex_t 的 PAGE_TAB_NUM。 */
 CONST OsfpRegAttr_t *DtParse(BYTE memaddr);
 
 /* 指令解析帧回调（I2C1 EV STPDET 中断内执行，I2cSlaveInit 已默认接线）：
  * 按帧首地址 g_RxBuf[I2C_RX_ADDR] 经 DtParseForm 定位寄存器（内部用
  * g_DtTabCtrl 选页/ bank）后路由——
  *   RO / RO_COR 写   → 丢弃（CMIS：RO 写无效果）；
- *   oprfunc != NULL  → 特殊行为寄存器，按 opftype 立即执行或压 deferred
+ *   oprfunc != NULL  → 触发寄存器，须整寄存器写（off==attr->offset 且
+ *                      len==attr->size），按 opftype 立即执行或压 deferred
  *                      FIFO（126/127 页/ bank 切换、密码、复位触发）；
- *   纯存储 MEMT_SRAM → WriteProtocolMsaSpace 写影子，支持同 memtype 顺序
- *                      写（跨 128B 半页 / 尾字节异质区丢弃）；
+ *   纯存储 MEMT_SRAM → WriteProtocolMsaSpace 写影子。CMIS 字节寻址：帧
+ *                      起点可在表项任意字节，[off, off+len) 整段须同
+ *                      memtype 非 RO（跨 128B 半页 / 异质区 / RO 丢弃）；
  *   MEMT_FLASH/NONE  → 不落存储（Flash 持久化归线程 dirty 队列）。
- * 无写数据 / 页未登记 / Reserved 区直接返回。 */
+ * 无写数据 / 页未登记 / 空隙 / Reserved 区直接返回。 */
 VOID DtFrameCb(DWORD frame_bytes);
 
 /* 读相位页快照数据源：注册到 I2cSlaveRegisterReadSource（I2cSlaveInit 已
@@ -98,7 +100,7 @@ VOID DtReadSource(BYTE memaddr, BYTE *buf, DWORD len);
  * 事件会被一并清掉（概率性单事件丢失，bring-up 可接受）。 */
 VOID DtCorClear(BYTE memaddr, BYTE rdlen);
 
-/* deferred 操作 FIFO（深度 8）：ISR 压入，主循环轮询执行。
+/* deferred 操作 FIFO（深度 16）：ISR 压入，主循环轮询执行。
  * DtDeferredPush 由 DtFrameCb（ISR）压入 oprfunc + 入参副本，满则丢弃返回 ERR；
  * DtDeferredPoll 由主循环取一个执行（1=执行了，0=空）；DtDeferredCount 待处理数。 */
 DWORD DtDeferredPush(OprateFunc func, CONST BYTE *cmd, BYTE len);

@@ -19,6 +19,11 @@ typedef enum {
     TASK_ID_RSSI_AD_SAMPLES,
     TASK_ID_TX_AD_SAMPLES,
     TASK_ID_PERF_MON,
+    TASK_ID_MSM,
+    TASK_ID_DPSM,
+    TASK_ID_FW_RESET,
+    TASK_ID_ODSP_ADAPT,
+    TASK_ID_VDM,
     TASK_ID_NUM
 }Timer2TaskIdEnum_t;
 

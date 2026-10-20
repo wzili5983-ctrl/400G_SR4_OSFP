@@ -18,6 +18,7 @@
 
 #include "gpioresource.h"
 #include "gpioresource_impl.h"
+#include "odsp_lasi.h"         /* OdspLasiIrqHandler：EXTI4_15 共享 IRQ 分发 */
 
 #include "gd32e511_512.h"
 #include "gd32e511_512_exti.h"
@@ -95,12 +96,14 @@ BYTE MslLpReqHwIsActive(VOID)
     return (level == IO_LOW) ? 1U : 0U;    /* 低有效 */
 }
 
-/*! EXTI line 4-15 共享中断：LPMODE(PC6, line 6) 下降沿置标志回线程。
- *  单线占用期间只判 line 6；若后续挂其它 EXTI 线，在此扩展分支。 */
+/*! EXTI line 4-15 共享中断：LPMODE(PC6, line 6) 下降沿置标志回线程；
+ *  LASI(PE7, line 7) 双沿置标志回线程（ODSP 适配层消费）。
+ *  两线共享 IRQ，ISR 只置标志不做事（BSC I2C 事务严禁进 ISR）。 */
 void EXTI4_15_IRQHandler(void)
 {
     if(exti_interrupt_flag_get(MSL_LPMODE_EXTI_LINE) != RESET) {
         exti_interrupt_flag_clear(MSL_LPMODE_EXTI_LINE);
         g_MslLpReqHw = 1U;
     }
+    OdspLasiIrqHandler();
 }

@@ -18,7 +18,6 @@ VOID McuClockInit(VOID)
     RCU_CTL0 |= RCU_CTL0_IRC8MEN;
     while ((RCU_CTL0 & RCU_CTL0_IRC8MSTB) == 0U) {
     }
-    fmc_wscnt_set(WS_WSCNT_3);
     rcu_ahb_clock_config(RCU_AHB_CKSYS_DIV1);
     rcu_apb1_clock_config(RCU_APB1_CKAHB_DIV1);
     rcu_apb2_clock_config(RCU_APB2_CKAHB_DIV1);
@@ -31,6 +30,8 @@ VOID McuClockInit(VOID)
     RCU_CFG0 = reg_temp | RCU_CKSYSSRC_PLL;
     while ((RCU_CFG0 & RCU_CFG0_SCSS) != RCU_SCSS_PLL) {
     }
+    /* 切到 80MHz 后再降 flash 等待态（4→3）：避免在 120MHz 下以 3WS 取指越界 */
+    fmc_wscnt_set(WS_WSCNT_3);
     SystemCoreClockUpdate();
     SysTick->CTRL = 0U;
 }

@@ -2,8 +2,20 @@
 outputs/
 projects/Objects/
 projects/Listings/
+projects/**/Objects/
+projects/**/Listings/
 *.uvoptx
 *.uvguix.*
 projects/build_log.txt
 projects/build_result.log
 projects/flash_build_log.txt
+projects/**/*.log
+projects/**/flash_build_log.txt
+projects/**/bl_dis.txt
+
+# Python 工具字节码缓存
+__pycache__/
+*.pyc
+
+# Office 临时锁文件
+~$*

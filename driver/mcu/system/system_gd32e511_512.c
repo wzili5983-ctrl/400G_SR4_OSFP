@@ -38,7 +38,9 @@
  * 0x08010200, not at the flash base. The APP_B build carries its own link
  * base; the bootloader sets SCB->VTOR to the started slot's payload base
  * before jumping -- this value only covers the standalone / debugger path. */
+#ifndef VECT_TAB_OFFSET
 #define VECT_TAB_OFFSET  (uint32_t)0x00010200        /* APP_A payload base - flash base */
+#endif
 
 /* select a system clock by uncommenting the following line */
 //#define __SYSTEM_CLOCK_8M_HXTAL              (__HXTAL)

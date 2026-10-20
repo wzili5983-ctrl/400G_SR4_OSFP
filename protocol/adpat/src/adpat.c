@@ -13,6 +13,7 @@
 #include "adpat.h"
 #include "sramresource.h"   /* ReadSram / SRAM_ID_PARAM */
 #include "flashresource.h"  /* ReadFlash / WriteFlash / EraseFlash / FLASH_ID_PARA_A */
+#include "gd32e511_512.h"   /* NVIC_DisableIRQ / NVIC_EnableIRQ / I2C1_EV(ER)_IRQn */
 
 #define ADPAT_STR_(x)               #x
 #define ADPAT_STR(x)                ADPAT_STR_(x)
@@ -78,6 +79,26 @@ DWORD ReadSramProtocolMsaPage(TabIndex_t page_id, BYTE *buf)
 DWORD WriteSramProtocolMsaPage(TabIndex_t page_id, CONST BYTE *buf)
 {
     return WriteSramProtocolMsaSpace(page_id, 0U, buf, (BYTE)ADPAT_MGMT_PAGE_SIZE);
+}
+
+/*================ 影子并发锁（线程侧） ================
+ * 屏蔽 I2C1 EV/ER（host 帧回调 ISR），保留 SysTick/Timer2。非嵌套、必须严格
+ * 成对、仅线程上下文调用（ISR 不得调用：会自锁）。详见 adpat.h。
+ *
+ * 实现注记：doc 原写 BASEPRI（屏蔽优先级 >= 2 的中断），此处改用
+ * NVIC_DisableIRQ/EnableIRQ 直禁 I2C1 EV/ER 两个中断源——效果等价（当前
+ * 优先级 2/3 的仅 I2C1 EV/ER，SysTick/Timer2 为 0/1 不受影响），且与
+ * i2c_slave.c 现有 NVIC API 一致、免去 __NVIC_PRIO_BITS 位移依赖。 */
+VOID AdpatShadowLock(VOID)
+{
+    NVIC_DisableIRQ(I2C1_EV_IRQn);
+    NVIC_DisableIRQ(I2C1_ER_IRQn);
+}
+
+VOID AdpatShadowUnlock(VOID)
+{
+    NVIC_EnableIRQ(I2C1_EV_IRQn);
+    NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
 
 /*================ Flash 协议空间（用户参数·主区影子）访问 API 实现 ================

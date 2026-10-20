@@ -35,20 +35,15 @@
 
 #include "flashresource_impl.h"
 
-/* Region frame access over the 11 memory_map.h areas (FLASH_ID_xxx);
- * offsets are relative to the region base.
- * Read runs over the memory-mapped flash (XIP); write programs 64-bit
- * doublewords (offset/len must be 8-byte aligned, target area must be erased)
- * and verifies each doubleword; erase wipes the whole region page by page.
- * WRP regions (FLASH_ID_BOOTLOADER / FLASH_ID_KEY) reject write/erase.
- */
+/* Region access over the physical FlashId_t resources. Offsets are relative
+ * to each region's own address space. Internal flash is XIP and programs
+ * 64-bit doublewords; FLASH_ID_DSP_FW dispatches to the U15 SPI NOR adapters.
+ * WRP regions reject write/erase. */
 DWORD ReadFlash(BYTE id, DWORD offset, BYTE *data, DWORD len);
 DWORD WriteFlash(BYTE id, DWORD offset, CONST BYTE *data, DWORD len);
 DWORD EraseFlash(BYTE id);
-/* Frame header sanity check: company magic / flashid / storeaddr / fwsize /
- * header CRC32 (crc32hdr counted as 0). Valid on the 6 user-upgradeable
- * regions (FLASH_ID_APP_A/B, FLASH_ID_PARA_A/B, FLASH_ID_MISC_A/B), all
- * sharing the same 128B FrameHead_t. */
+/* Frame header sanity check: company magic / FlashType_t type / storeaddr /
+ * fwsize / header CRC32 (crc32hdr counted as 0). */
 DWORD VerifyFlashHdr(BYTE id);
 
 /* The OTA metadata ping-pong journal and the Dual-APP rollback state
@@ -58,29 +53,33 @@ DWORD VerifyFlashHdr(BYTE id);
  * WriteFlash / EraseFlash on FLASH_ID_METADATA_A. */
 
 /* APP upgrade helpers (fixed-A / mirror-B scheme): APP Slot A is the fixed
- * running region; APP Slot B is the A-mirror region and the SOLE upgrade
- * entry. Every APP upgrade -- including the factory / blank-device case --
- * goes through B first, and the package must be A-named (flashid
- * FLASH_ID_APP_A, storeaddr MEM_APP_A_BASE), byte-identical to the slot A
- * image; there is no B-named package. InstallSlotImage writes a received
- * APP.bin (512B frame header area with the common 128B FrameHead_t +
- * payload at +0x200) into a slot -- the normal target is FLASH_ID_APP_B;
- * the bin buffer is not modified. Packages are validated (magic /
- * targeting rules / geometry / payload CRC32 crc32data / header CRC32
- * crc32hdr) before the slot is erased; the payload is programmed first
- * and the frame header area last, so a torn install is either the old
- * image or a rejected header-less slot.
+ * running region; APP Slot B is the SOLE APP upgrade receive region. Every
+ * APP upgrade goes through B first. The package always declares
+ * FLASH_TYPE_APP + MEM_APP_A_BASE, so B can be promoted to A by a verbatim
+ * copy; APP_A direct download is not supported.
+ * InstallSlotImage writes a received APP.bin (512B frame header area with
+ * the common 112B FrameHead_t + payload at +0x200) into an APP slot, with
+ * FLASH_ID_APP_B as the normal target; the input buffer is not modified.
+ * Packages are validated (magic / type+storeaddr rules / geometry / payload
+ * CRC32 crc32data / header CRC32 crc32hdr) before the slot is erased; the
+ * payload is programmed first and the frame header area last, so a torn
+ * install is either the old image or a rejected header-less slot.
  * VerifyFrameHdrBuf is the OTA receive gate: it validates the frame header
- * in a RAM buffer (the SRAM OTA_RX buffer) BEFORE the first byte is
- * programmed into the slot -- a failed header stops the upgrade with the
- * slot untouched.
- * VerifySlotImage is the deep check: flash-readback CRC32 against
- * FrameHead_t.crc32data; run it on slot B after the install and before
- * the upgrade is confirmed. After confirmation the bootloader promotes
- * B to A with a verbatim copy (header already A-named), keeping the
- * steady-state invariant slot A == slot B. */
+ * in a RAM buffer BEFORE the first byte is programmed into the target --
+ * a failed header stops the upgrade with the target untouched.
+ * VerifyFramedImage is the generic deep check: flash-readback CRC32 against
+ * FrameHead_t.crc32data, for both internal framed images and DSP_FW on U15.
+ * VerifySlotImage is the APP-only wrapper used before confirmation. After
+ * confirmation the bootloader promotes B to A, keeping the steady-state
+ * invariant slot A == slot B. */
 DWORD InstallSlotImage(BYTE id, BYTE *bin, DWORD len);
 DWORD VerifySlotImage(BYTE id);
 DWORD VerifyFrameHdrBuf(BYTE id, CONST BYTE *buf, DWORD len);
+/* Erase a region page by page, feeding the independent watchdog after each
+ * page (CDB 0101h Start path); see flashresource_impl.h. */
+DWORD EraseFlashWithFeed(BYTE id);
+/* Confirm the pending upgrade (CDB 0109h Run): write the 64B OtaInfo_t
+ * CONFIRMED record into OTA metadata J-A (see flashresource_impl.h). */
+DWORD OtaConfirm(VOID);
 
 #endif

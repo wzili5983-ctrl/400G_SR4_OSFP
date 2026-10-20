@@ -16,7 +16,6 @@
 #include "ral.h"
 #include "ral_operate.h"    /* OsfpOperate*：表项 oprfunc 接线 */
 
-
 /* Page Low 寄存器属性表（CMIS 5.3 Table 8-5 ~ 8-25） */
 CONST OsfpRegAttr_t g_OsfpInfPageLow[] = {
     /* Byte 0-3: Management Characteristics + Global Status */
@@ -63,25 +62,30 @@ CONST OsfpRegAttr_t g_OsfpInfPageLow[] = {
     {0x76, 4, ACC_WO_SC,  MEMT_NONE,  OsfpOperatePasswordChange, OPF_DEFERRED},   /* PasswordChangeEntryArea (U32 BE)：解锁+Host 范围才接受 */
     {0x7A, 4, ACC_WO_SC,  MEMT_NONE,  OsfpOperatePasswordEntry, OPF_DEFERRED},    /* PasswordEntryArea (U32 BE)：比对解锁，结果写 0x2A */
     /* Byte 126-127: BankSelect + PageSelect 合并域（CMIS 5.3：二者须同一次
-     * WRITE）。cmd[0]=BankSelect(126) cmd[1]=PageSelect(127)，len 须=2；
-     * 表内不再有 0x7F 独立项——单独写 127 不命中任何寄存器被丢弃，同写约束
-     * 由此在 RAL 表结构层强制。oprfunc 切换页/ bank 上下文并维护影子。 */
+     * WRITE）。cmd[0]=BankSelect(126) cmd[1]=PageSelect(127)。表内不再有
+     * 0x7F 独立项，同写约束由两道门禁强制：引擎触发项整寄存器写
+     * （off==0x7E 且 len==2，单独写 127 或 126 都丢弃），回调 OsfpOperate*
+     * BankPageSelect 再自检 len==2 兜底。oprfunc 切换页/ bank 上下文并维护
+     * 影子。 */
     {0x7E, 2, ACC_RWW,    MEMT_SRAM,  OsfpOperateBankPageSelect, OPF_IMMEDIATE},   /* BankPageSelect：不支持页自清零回 00h，bank 低 2 位 */
 };
 
-/* Page 00h 寄存器属性表（CMIS 5.3 §8.3 Table 8-26 ~ 8-41，Administrative
- * Information，全部静态 RO）。offset = 页内偏移（宿主窗口地址 - 80h）。
- *
- * Table 8-26 Overview 原表排印错位（地址列自 202 起偏移），下图为勘定后的
- * 字节图——依据：§8.3.3~§8.3.12 normative 文本的显式字节号 + 5.3 修订记录
- * （00h:208 加衰减节点、00h:213 加 MCI 宣告），并经 CMIS 4.0 §8.3 交叉核对：
+/* Page 00h 寄存器属性表已删（2026-10-15 占位化，省 ~114B Flash）：Page 00h
+ * 是纯静态身份页（CMIS 5.3 §8.3 Administrative，全 RO），无任何动态行为需
+ * 表驱动——g_OsfpTabForm[1] 改为空表占位 {0x00, 0, 0, NULL}，host 读/写
+ * 行为与 03h-0Fh 占位段一致（读影子槽镜像、写丢弃）。影子槽 [1] 仍由
+ * MgiParamLoad 从 Flash 参数区偏移 0x00280 整区拷贝载入，数据契约不变。
+ * 下字节图仅作 CMIS 布局文档参考（勘定依据：§8.3.3~§8.3.12 + 5.3 修订记录
+ * + CMIS 4.0 §8.3 交叉核对；Table 8-26 原表排印错位，地址列自 202 起偏移）：
  *   128       SFF8024IdentifierCopy
  *   129-144   VendorName        145-147 VendorOUI      148-163 VendorPN
  *   164-165   VendorRev         166-181 VendorSN       182-189 DateCode
  *   190-199   CLEICode
- *   200-201   ModulePowerCharacteristics（200 bit7-5 PowerClass，201 MaxPower/0.25W）
+ *   200-201   ModulePowerCharacteristics（200 bit7-5 PowerClass=2(12W)=0x20，
+ *             201 MaxPower=48(12W/0.25W)=0x30）
  *   202       CableAssemblyLinkLength（可分离光纤介质规格要求 = 0）
- *   203       ConnectorType           204-209 CopperCableAttenuation（非铜缆 = 0，含 209 Res.）
+ *   203       ConnectorType（0Ch = MPO-12，SFF-8024 Table 4-3）
+ *   204-209   CopperCableAttenuation（非铜缆规格规定全 0，含 209 Res.）
  *   210       MediaLaneUnsupported    211       FarEndConfiguration（可分离媒体 = 0）
  *   212       MediaInterfaceTechnology（850 nm VCSEL = 00h）
  *   213-214   MCIRelatedAdvertisement（213 MciFlowControlDuration + 214 Res.，5.3 新增）
@@ -89,37 +93,9 @@ CONST OsfpRegAttr_t g_OsfpInfPageLow[] = {
  *   221       Custom（4.0 Table 8-15 定义为 Custom，无细节节描述）
  *   222       PageChecksum = sum(128..221) 低 8 位（§8.3.11）
  *   223-255   Custom（non-volatile，§8.3.12）
- * 本模块取值备注：400G-SR4 OSFP 光纤模块，202/204-211 按规格填 0，
- * MediaInterfaceTechnology = 00h（850 nm VCSEL）。
  * 215-221 不进表（Reserved/Custom），但其读值参与 PageChecksum，镜像中
- * 必须为确定值（约定 0x00）。 */
-CONST OsfpRegAttr_t g_OsfpInfPage00H[] = {
-    /* Byte 128: Identifier Copy */
-    {0x00, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* SFF8024IdentifierCopy：= Lower 00h:0 */
-    /* Byte 129-199: Vendor Information（ASCII） */
-    {0x01, 16, ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* VendorName (129-144) */
-    {0x11, 3,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* VendorOUI (145-147) */
-    {0x14, 16, ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* VendorPN (148-163) */
-    {0x24, 2,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* VendorRev (164-165) */
-    {0x26, 16, ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* VendorSN (166-181) */
-    {0x36, 8,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* DateCode (182-189) */
-    {0x3E, 10, ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* CLEICode (190-199) */
-    /* Byte 200-209: 功率 / 长度 / 连接器 / 铜缆衰减 */
-    {0x48, 2,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* ModulePowerCharacteristics (200-201)：200 bit7-5 PowerClass，201 MaxPower/0.25W */
-    {0x4A, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* CableAssemblyLinkLength (202)：可分离光纤介质规格要求填 0 */
-    {0x4B, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* ConnectorType (203)：码值见 SFF-8024 Table 4-3 */
-    {0x4C, 6,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* CopperCableAttenuation (204-209)：非铜缆规格规定全 0（含 209 Reserved） */
-    /* Byte 210-214: Lane / FarEnd / 媒体技术 / MCI 宣告 */
-    {0x52, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* MediaLaneUnsupported (210)：SR4 四通道全支持 = 0 */
-    {0x53, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* FarEndConfiguration (211)：可分离媒体 = 0 */
-    {0x54, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* MediaInterfaceTechnology (212) = 00h：850 nm VCSEL */
-    {0x55, 2,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* MCIRelatedAdvertisement (213-214)：213 = MciFlowControlDuration(bit7 Encoding + bit6-0 Duration)，214 Reserved；仅 SPIMCI 有意义，I2C 模块 = 0 */
-    /* Byte 215-220 Reserved / 221 Custom：不进表，但读值参与 PageChecksum，
-     * 镜像中约定填 0x00 */
-    /* Byte 222: Page Checksum */
-    {0x5E, 1,  ACC_RO,     MEMT_FLASH, NULL, OPF_NONE},   /* PageChecksum (222) = sum(128..221) 低 8 位，需与镜像数据一致 */
-    /* Byte 223-255: Custom（non-volatile），不进表 */
-};
+ * 必须为确定值（约定 0x00）。
+ * 本模块取值备注：400G-SR4 OSFP 光纤模块，202/204-211 按规格填 0。 */
 
 /* Page 01h 寄存器属性表（CMIS 5.3 §8.4 Table 8-42 ~ 8-60，Advertising，
  * paged 模块必配的只读静态能力清单）。offset = 页内偏移（宿主窗口 128-255
@@ -222,20 +198,23 @@ CONST OsfpRegAttr_t g_OsfpInfPage02H[] = {
     {0x40, 8,  ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* OpticalPowerRx High/Low Alarm/Warning（U16，0.1µW） */
     /* Byte 200-229 Reserved / 230-254 Custom：不进表，读值按默认 0x00 处理 */
     /* Byte 255: Page Checksum */
-    {0x7F, 1,  ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* PageChecksum = sum(128..254) 低 8 位；阈值变化时引擎须重算 */
+    {0x7F, 1,  ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* PageChecksum = sum(130..254) 低 8 位（128-129 固件版本有意排除，CMIS §8.4）；镜像变化时须重算 */
 };
 
 /* Page 10h 寄存器属性表（CMIS 5.3 §8.9 Table 8-67 ~ 8-81，Banked Page：
  * Lane Control and Data Path Control）。banked 页：每 bank = 一组 8 条
  * host lane，bank↔lane 对应由应用/DPSM 层解释，引擎按 bank 选
  * PAGE_ID_10H_0..3 影子槽。offset = 页内偏移（宿主窗口地址 - 80h），
- * 连续同属性字段合并为大 size 项（DtRegFind 精确匹配写起始 offset）。
- * Apply* 触发寄存器（ApplyDPInit/ApplyImmediate/ApplyImmediateTx/Rx）登记为
- * WO_SC + MEMT_NONE：影子不落数据（spec：WO 读值未指定）；Provision /
- * Provision-and-Commission 语义与 ConfigStatus 反馈待 DPSM 实现后接
- * oprfunc，当前 host 写入被丢弃——等效 spec 的 "WRITE access is ignored"。
- * SteppedConfigOnly=1b（00h:2.6）→ ApplyImmediate 不支持，按 spec 写忽略，
- * 登记 RW 影子即「忽略」语义。
+ * 连续同属性字段合并为大 size 项（DtRegFind 按区间包含定位，合并块内任意
+ * 字节均可作写帧起点；触发型字段例外，须整寄存器写故不参与合并）。
+ * Apply* 触发寄存器分两类：
+ *   - ApplyDPInit（SCS0 0x0F）登记 WO_SC + MEMT_NONE + oprfunc
+ *     （OsfpOperateApplyDpInit，OPF_IMMEDIATE）：影子不落数据（spec：WO 读
+ *     值未指定），写触发 Provision（SCS0→ACS 拷贝 + DpsmApplyDpInit，
+ *     ConfigStatus/DPInitPending 反馈在 Page 11h）；
+ *   - ApplyImmediate / ApplyImmediateTx/Rx：SteppedConfigOnly=1b（00h:2.6）
+ *     不支持，按 spec 写忽略——ApplyImmediate 登记 RW 影子即「忽略」语义，
+ *     Tx/Rx 登记 WO_SC + MEMT_NONE 写丢弃。
  * 0x69-0x7F（宿主 233-255：Reserved[7] + Custom[16]）不进表：读回 boot
  * 零镜像 0x00（§8.4.17 PageChecksum 仅定义 01h:255，10h 无 checksum）。 */
 CONST OsfpRegAttr_t g_OsfpInfPage10H[] = {
@@ -244,7 +223,7 @@ CONST OsfpRegAttr_t g_OsfpInfPage10H[] = {
     /* 129-142: Lane-Specific Direct Effect Control（RW Adv，App 层按 01h:155-156 宣告逐位支持） */
     {0x01, 14, ACC_RW,    MEMT_SRAM, NULL, OPF_NONE},    /* InputPolarityFlipTx/OutputDisableTx/AutoSquelchDisableTx/OutputSquelchForceTx/AdaptiveInputEqFreezeTx/AdaptiveInputEqStoreTx/OutputPolarityFlipRx/OutputDisableRx/AutoSquelchDisableRx（含 0x07/0x0A 位保留） */
     /* 143-177: Staged Control Set 0（SCS0；表 8-70~8-75） */
-    {0x0F, 1,  ACC_WO_SC, MEMT_NONE, NULL, OPF_NONE},    /* SCS0::ApplyDPInitLane1-8（WO Rqd；单字节写限制未在引擎强制，语义待 DPSM） */
+    {0x0F, 1,  ACC_WO_SC, MEMT_NONE, OsfpOperateApplyDpInit, OPF_IMMEDIATE},    /* SCS0::ApplyDPInitLane1-8（WO Rqd；单字节 WRITE 触发 Provision：SCS0→ACS 拷贝 + DpsmApplyDpInit） */
     {0x10, 1,  ACC_RW,    MEMT_SRAM, NULL, OPF_NONE},    /* SCS0::ApplyImmediateLane1-8（SteppedConfigOnly=1 → 不支持，写忽略=存影子） */
     {0x11, 8,  ACC_RW,    MEMT_SRAM, NULL, OPF_NONE},    /* SCS0::DPConfigLane1-8（AppSelCode/DataPathID/ExplicitControl，RW Rqd） */
     {0x19, 23, ACC_RW,    MEMT_SRAM, NULL, OPF_NONE},    /* SCS0 Tx/Rx SI 控制（宿主153-175）：AdaptiveInputEqEnableTx/RecallTx/HostControlledInputEqTargetTx/CDREnableTx/CDREnableRx/OutputEqPre/PostCursorTargetRx/OutputAmplitudeTargetRx */
@@ -268,7 +247,7 @@ CONST OsfpRegAttr_t g_OsfpInfPage10H[] = {
  * 监视任务写影子，host 只读；写路径表项仅承担 RO 门禁。
  * offset = 页内偏移（宿主窗口地址 - 80h）。COR 区（Flags）读后清位归
  * app 层（flags&=~快照值）；ACS/ConfigStatus 由 DPSM 在 Apply 命令
- * 执行后回填（10h 的 Apply* 触发寄存器接 oprfunc 时联动）。
+ * 执行后回填（10h 的 ApplyDPInit 触发寄存器接 OsfpOperateApplyDpInit 联动）。
  * 0x6C-0x6F（宿主 236-239 Reserved[4]）不进表：读回 0x00；11h 无
  * PageChecksum（同 10h，§8.4.17 只管 01h:255）。 */
 CONST OsfpRegAttr_t g_OsfpInfPage11H[] = {
@@ -291,8 +270,9 @@ CONST OsfpRegAttr_t g_OsfpInfPage11H[] = {
      * 0h=无状态/1h=成功/Ch=进行中/2h-Bh=拒收原因，Apply 命令协议的结果反馈） */
     {0x4A, 4,  ACC_RO,     MEMT_SRAM, NULL, OPF_NONE},
     /* 206-234: Active Control Set（表 8-93/8-94/8-95；Provision 成功后由
-     * DPSM 从 SCS 拷贝回填：DPConfig 0x4E(RO Rqd)、Tx 控制 0x56、
-     * Rx 控制 0x5E(CDREnableRx 1B + Pre/PostCursor/AmplitudeTargetRx 各 4B)） */
+     * RAL 引擎 OsfpOperateApplyDpInit 从 SCS0 拷贝回填：DPConfig 0x4E
+     * (RO Rqd)、Tx 控制 0x56、Rx 控制 0x5E(CDREnableRx 1B + Pre/PostCursor/
+     * AmplitudeTargetRx 各 4B)） */
     {0x4E, 8,  ACC_RO,     MEMT_SRAM, NULL, OPF_NONE},
     {0x56, 8,  ACC_RO,     MEMT_SRAM, NULL, OPF_NONE},
     {0x5E, 13, ACC_RO,     MEMT_SRAM, NULL, OPF_NONE},
@@ -301,6 +281,208 @@ CONST OsfpRegAttr_t g_OsfpInfPage11H[] = {
     /* 240-255: Media Lane↔Wavelength/Fiber Mapping（表 8-97；RO Cnd；
      * WDM 应用才使用，SR4 恒 0——由 boot 镜像决定，不登记亦可） */
     {0x70, 16, ACC_RO,     MEMT_SRAM, NULL, OPF_NONE},
+};
+
+/* B4H..B7H 寄存器初始化页属性表（64 × 2B 大端槽，ACC_RW + MEMT_SRAM 纯存储）：
+ * 布局见 ral.h「B4H..B7H 寄存器初始化页布局」（0x00=REGNUM u8 + N×{ADDR@0x04+4n,
+ * VALUE@0x06+4n}）。B4H=DRV 全局、B5H=DRV lane 级、B6H/B7H=TIA(GN1816) 四页共用
+ * 本表（同布局，2026-10-14 用户定稿）。MEMT_SRAM：host I2C 写经 DtFrameCb 直落
+ * SRAM 影子槽（DtFrameCb 对 MEMT_FLASH 纯存储写暂丢弃——Flash 持久化归参数区
+ * 流程★），消费端 InitDrv/InitTia 经 ReadSramProtocolMsaSpace 读回后逐项写芯片。 */
+#define BXH_INIT_PAIR(n) \
+    { (BYTE)(4U * (n)),      2, ACC_RW, MEMT_SRAM, NULL, OPF_NONE }, \
+    { (BYTE)(4U * (n) + 2U), 2, ACC_RW, MEMT_SRAM, NULL, OPF_NONE }
+CONST OsfpRegAttr_t g_OsfpInfPageBxH[] = {
+    BXH_INIT_PAIR( 0), BXH_INIT_PAIR( 1), BXH_INIT_PAIR( 2), BXH_INIT_PAIR( 3),
+    BXH_INIT_PAIR( 4), BXH_INIT_PAIR( 5), BXH_INIT_PAIR( 6), BXH_INIT_PAIR( 7),
+    BXH_INIT_PAIR( 8), BXH_INIT_PAIR( 9), BXH_INIT_PAIR(10), BXH_INIT_PAIR(11),
+    BXH_INIT_PAIR(12), BXH_INIT_PAIR(13), BXH_INIT_PAIR(14), BXH_INIT_PAIR(15),
+    BXH_INIT_PAIR(16), BXH_INIT_PAIR(17), BXH_INIT_PAIR(18), BXH_INIT_PAIR(19),
+    BXH_INIT_PAIR(20), BXH_INIT_PAIR(21), BXH_INIT_PAIR(22), BXH_INIT_PAIR(23),
+    BXH_INIT_PAIR(24), BXH_INIT_PAIR(25), BXH_INIT_PAIR(26), BXH_INIT_PAIR(27),
+    BXH_INIT_PAIR(28), BXH_INIT_PAIR(29), BXH_INIT_PAIR(30), BXH_INIT_PAIR(31),
+};
+#undef BXH_INIT_PAIR
+
+/* D9H 通用芯片/GPIO/DAC/ADC 读写邮箱属性表（2026-10-12 用户定稿布局，见 ral.h）：
+ * 0x00-0x0C CHIP 记录：CHIPID 纯存储；REGADDR/REGVALUE 挂 oprfunc 写触发
+ * 芯片读/写事务（OPF_DEFERRED——芯片 I2C 事务禁 ISR）；REGRBVALUE 固件回填
+ * host RO；0x0D-0x0F GPIO 记录：GPIOID 写触发读（ReadGpio→GPIOSTATUS 回填）、
+ * GPIOVALUE 写触发写（WriteGpio），均 OPF_IMMEDIATE（GPIO 直读直写 ISR 安全）；
+ * 0x10-0x18 DAC 记录：DACID 写触发读（ReadDac→DACRDVALUE 回填）、DACVALUE 写
+ * 触发写（WriteDac），均 OPF_DEFERRED（DAC 可能走外部芯片 I2C）；
+ * 0x19-0x1D ADC 记录：ADCID 写触发读（ReadAdc→ADCVALUE 回填），OPF_DEFERRED
+ * （ADC 可能走外部芯片 I2C）；
+ * 触发寄存器值由回调自行持久化影子；0x1E-0x7F 保留不登记。 */
+CONST OsfpRegAttr_t g_OsfpInfPageD9H[] = {
+    {0x00, 1, ACC_RW,      MEMT_SRAM, NULL,                    OPF_NONE},      /* CHIPID：目标芯片 ID（CHIP_ID_TIA/DRV/DSP/PMIC） */
+    {0x01, 4, ACC_RW,      MEMT_SRAM, OsfpOperateD9hRegAddr,   OPF_DEFERRED},  /* REGADDR：写触发 ReadChip→REGRBVALUE 回填 */
+    {0x05, 4, ACC_RW,      MEMT_SRAM, OsfpOperateD9hRegValue,  OPF_DEFERRED},  /* REGVALUE：写触发 WriteChip */
+    {0x09, 4, ACC_RO,      MEMT_SRAM, NULL,                    OPF_NONE},      /* REGRBVALUE：固件回填读回值，host RO */
+    {0x0D, 1, ACC_RW,      MEMT_SRAM, OsfpOperateD9hGpioId,    OPF_IMMEDIATE}, /* GPIOID：写触发 ReadGpio→GPIOSTATUS 回填 */
+    {0x0E, 1, ACC_RW,      MEMT_SRAM, OsfpOperateD9hGpioValue, OPF_IMMEDIATE}, /* GPIOVALUE：写触发 WriteGpio */
+    {0x0F, 1, ACC_RO,      MEMT_SRAM, NULL,                    OPF_NONE},      /* GPIOSTATUS：固件回填读回电平，host RO */
+    {0x10, 1, ACC_RW,      MEMT_SRAM, OsfpOperateD9hDacId,     OPF_DEFERRED},  /* DACID：写触发 ReadDac→DACRDVALUE 回填 */
+    {0x11, 4, ACC_RW,      MEMT_SRAM, OsfpOperateD9hDacValue,  OPF_DEFERRED},  /* DACVALUE：写触发 WriteDac */
+    {0x15, 4, ACC_RO,      MEMT_SRAM, NULL,                    OPF_NONE},      /* DACRDVALUE：固件回填读回值，host RO */
+    {0x19, 1, ACC_RW,      MEMT_SRAM, OsfpOperateD9hAdcId,     OPF_DEFERRED},  /* ADCID：写触发 ReadAdc→ADCVALUE 回填 */
+    {0x1A, 4, ACC_RO,      MEMT_SRAM, NULL,                    OPF_NONE},      /* ADCVALUE：固件回填读回值，host RO */
+};
+
+/* 9Fh CDB 消息页属性表（2026-10-14 V5 定稿布局，见 ral.h「9Fh 布局」块）：
+ * CMDID 挂 oprfunc（OsfpOperate9fCmdId→CdbTrigger，OPF_IMMEDIATE）——host 单独
+ * 写 2B CMDID 触发命令；EPLLength/LPLLength/CdbChkCode/LPL 纯存储（host 写落
+ * 影子）；RPLLength/RPLChkCode 模块回填 host RO。
+ * 触发语义（oprfunc 按帧首地址分发）：CMDID 触发须单写（帧首=0x00 且 len==2）；
+ * 顺序写 CMDID+EPLLength+LPLLength+CdbChkCode（帧首 0x00 多字节）由 CdbTrigger
+ * len!=2 拒收，符合 CMIS「最后一次单独写 CMDID，STOP 落 129」触发模型。 */
+CONST OsfpRegAttr_t g_OsfpInfPage9FH[] = {
+    {0x00, 2,   ACC_RW,   MEMT_SRAM, OsfpOperate9fCmdId, OPF_IMMEDIATE},     /* CMDID u16BE：写触发命令 */
+    {0x02, 2,   ACC_RW,   MEMT_SRAM, NULL,                OPF_NONE},          /* EPLLength u16BE（恒 0，无 EPL） */
+    {0x04, 1,   ACC_RW,   MEMT_SRAM, NULL,                OPF_NONE},          /* LPLLength u8 */
+    {0x05, 1,   ACC_RW,   MEMT_SRAM, NULL,                OPF_NONE},          /* CdbChkCode u8 */
+    {0x06, 1,   ACC_RO,   MEMT_SRAM, NULL,                OPF_NONE},          /* RPLLength u8（模块回填） */
+    {0x07, 1,   ACC_RO,   MEMT_SRAM, NULL,                OPF_NONE},          /* RPLChkCode u8（模块回填） */
+    {0x08, 120, ACC_RW,   MEMT_SRAM, NULL,                OPF_NONE},          /* LPL 120B：命令负载/应答负载 */
+};
+
+/* ---- VDM (Vendor Defined Module) Page 属性表 ----
+ * Group 1: 32 instances (SNR/LTP/BER/FERC), descriptor+sample+threshold+flag/mask。
+ * Page 20h=Descriptor, 24h=Sample, 28h=Threshold, 2Ch=Flag, 2Dh=Mask, 2Fh=Advertisement+Control。
+ * 2Ch/2Dh/2Fh 仅 Bank0 实现，Bank1-3 继续占位（num=0）。
+ * 20h/28h 静态内容（描述符/阈值）为 Flash 参数区默认值——MgiParamLoad 整区
+ * memcpy 进影子即定稿，固件不再初始化；表项按「空表占位行」登记（num=0 →
+ * host 写丢弃、读影子镜像），故 g_OsfpInfPage20H/28H 已删（2026-10-19）。 */
+
+/* Page 24h Bank0: VDM Samples 寄存器属性表（CMIS 5.3 §8.22，X16 大端，全 RO）。
+ * 32 个已填充实例（Group 1）各 2B，offset = VdmInstanceId_t 序号×2，与
+ * g_VdmInsInfo 的 vdminfo.valueOffset 一一对应；未填充实例 32-255 不进表。
+ * 逐实例登记（不合并成大块）：区间包含查找下合并块已可写，逐条保留是为
+ * 了每实例可单独命名定位；历史动机（精确匹配时非起始偏移查不到）见
+ * data_transfer.c DtRegFind 注释。 */
+CONST OsfpRegAttr_t g_OsfpInfPage24H[] = {
+    /* Byte 128-143: SNR Samples (大端 2B, DB256) */
+    {0x00, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Media Lane1 */
+    {0x02, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Media Lane2 */
+    {0x04, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Media Lane3 */
+    {0x06, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Media Lane4 */
+    {0x08, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Host Lane1 */
+    {0x0A, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Host Lane2 */
+    {0x0C, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Host Lane3 */
+    {0x0E, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* SNR Host Lane4 */
+    /* Byte 144-159: LTP Samples (大端 2B, DB256) */
+    {0x10, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Media Lane1 */
+    {0x12, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Media Lane2 */
+    {0x14, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Media Lane3 */
+    {0x16, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Media Lane4 */
+    {0x18, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Host Lane1 */
+    {0x1A, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Host Lane2 */
+    {0x1C, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Host Lane3 */
+    {0x1E, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* LTP Host Lane4 */
+    /* Byte 160-175: Pre-FEC BER Samples (大端 2B, F16) */
+    {0x20, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Cur Media */
+    {0x22, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Avg Media */
+    {0x24, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Min Media */
+    {0x26, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Max Media */
+    {0x28, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Cur Host */
+    {0x2A, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Avg Host */
+    {0x2C, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Min Host */
+    {0x2E, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* BER Max Host */
+    /* Byte 176-191: FERC Samples (大端 2B, U16CNT) */
+    {0x30, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC Cur Media */
+    {0x32, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC Avg Media */
+    {0x34, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC Min Media */
+    {0x36, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC Max Media */
+    {0x38, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC Cur Host */
+    {0x3A, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC Avg Host */
+    {0x3C, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC TOT Media */
+    {0x3E, 2, ACC_RO,     MEMT_SRAM,  NULL, OPF_NONE},   /* FERC TOT Host */
+};
+
+/* Page 2Ch Bank0: VDM Flags 寄存器属性表（CMIS 5.3 §8.22，布局同 2Dh，RO/COR）。
+ * 16B 对应 32 个已填充实例：byte n 装实例 2n（高 nibble bit7-4）与 2n+1
+ * （低 nibble bit3-0），每 nibble 自低位向高位 = HighTCAlarm/LowTCAlarm/
+ * HighTCWarning/LowTCWarning；offset = 实例号/2，与 g_VdmInsInfo 的
+ * flag.offset 一一对应。VdmThresholdCheck 只置位不清（COR：host 读过的
+ * 字节由 DtCorClear 清零），host 写一律丢弃（ACC_RO_COR）。
+ * 逐字节登记（不合并成大块）：区间包含查找下合并块已可读，逐条保留是为
+ * 了每 Flag 字节可单独命名定位；历史动机（精确匹配时非起始偏移的 Flag
+ * 读落空）见 data_transfer.c DtRegFind 注释。 */
+CONST OsfpRegAttr_t g_OsfpInfPage2CH[] = {
+    /* Byte 128-131: SNR Flags */
+    {0x00, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag SNR Media Lane1/2 */
+    {0x01, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag SNR Media Lane3/4 */
+    {0x02, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag SNR Host Lane1/2 */
+    {0x03, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag SNR Host Lane3/4 */
+    /* Byte 132-135: LTP Flags */
+    {0x04, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag LTP Media Lane1/2 */
+    {0x05, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag LTP Media Lane3/4 */
+    {0x06, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag LTP Host Lane1/2 */
+    {0x07, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag LTP Host Lane3/4 */
+    /* Byte 136-139: Pre-FEC BER Flags */
+    {0x08, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag BER Cur/Avg Media */
+    {0x09, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag BER Min/Max Media */
+    {0x0A, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag BER Cur/Avg Host */
+    {0x0B, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag BER Min/Max Host */
+    /* Byte 140-143: FERC Flags */
+    {0x0C, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag FERC Cur/Avg Media */
+    {0x0D, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag FERC Min/Max Media */
+    {0x0E, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag FERC Cur/Avg Host */
+    {0x0F, 1, ACC_RO_COR, MEMT_SRAM,  NULL, OPF_NONE},   /* Flag FERC TOT Media/Host */
+};
+
+/* Page 2Dh Bank0: VDM Masks 寄存器属性表（CMIS 5.3 §8.22，布局同 2Ch，RW）。
+ * 16B 对应 32 个已填充实例：byte n 装实例 2n（高 nibble bit7-4）与 2n+1
+ * （低 nibble bit3-0），每 nibble 自低位向高位 = HighTCAlarm/LowTCAlarm/
+ * HighTCWarning/LowTCWarning；offset = 实例号/2，与 g_VdmInsInfo 的
+ * flagmsk.offset 一一对应。默认全 1（全屏蔽，见 g_MsaSpaceDefaultSeedInSram）。
+ * 逐字节登记（不合并成大块）：区间包含查找下合并块已可写，逐条保留是为
+ * 了每掩码字节可单独命名定位；历史动机（精确匹配时非起始偏移的掩码写
+ * 落空）见 data_transfer.c DtRegFind 注释。 */
+CONST OsfpRegAttr_t g_OsfpInfPage2DH[] = {
+    /* Byte 128-131: SNR Masks */
+    {0x00, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask SNR Media Lane1/2 */
+    {0x01, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask SNR Media Lane3/4 */
+    {0x02, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask SNR Host Lane1/2 */
+    {0x03, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask SNR Host Lane3/4 */
+    /* Byte 132-135: LTP Masks */
+    {0x04, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask LTP Media Lane1/2 */
+    {0x05, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask LTP Media Lane3/4 */
+    {0x06, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask LTP Host Lane1/2 */
+    {0x07, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask LTP Host Lane3/4 */
+    /* Byte 136-139: Pre-FEC BER Masks */
+    {0x08, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask BER Cur/Avg Media */
+    {0x09, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask BER Min/Max Media */
+    {0x0A, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask BER Cur/Avg Host */
+    {0x0B, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask BER Min/Max Host */
+    /* Byte 140-143: FERC Masks */
+    {0x0C, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask FERC Cur/Avg Media */
+    {0x0D, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask FERC Min/Max Media */
+    {0x0E, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask FERC Cur/Avg Host */
+    {0x0F, 1, ACC_RW,     MEMT_SRAM,  NULL, OPF_NONE},   /* Mask FERC TOT Media/Host */
+};
+
+/* Page 2Fh Bank0: VDM 宣告 + Freeze/Unfreeze 控制寄存器属性表（CMIS 5.3 §8.22，Mixed）。
+ * 页内偏移 = CMIS 字节号 − 128。逐寄存器登记（2Dh 样式）：
+ *   0x00 = CMIS byte 128：bit1-0 VDMSupport（0=Group1，本模块 32 实例）、
+ *          bit2 PowerSavingSupport、bit7-3 保留——模块宣告，host RO；
+ *   0x01 = CMIS byte 129-130：FineIntervalLength（U16 大端，0.1ms 单位，
+ *          BER/FERC 单样本测量窗口）——模块宣告，host RO；
+ *   0x10 = CMIS byte 144：bit7 FreezeRequest（写 1 定格 / 写 0 恢复）、
+ *          bit6 UnfreezeReq（本项目 W1S 约定）——回调持久化 host 写入值；
+ *   0x11 = CMIS byte 145：bit7 FreezeDone / bit6 UnfreezeDone 状态位，
+ *          唯一写者 = VdmFreezeApply/VdmUnfreezeApply（回调不落 host 写入值）。
+ * 宣告字节无 seed/参数区定稿值，影子为零镜像：VDMSupport=0 恰为 Group1
+ * （语义正确）、FineIntervalLength=0 占位待补★。0x03-0x0F 保留不登记
+ * （DtRegFind 落空：写丢弃 / 读影子镜像）。 */
+CONST OsfpRegAttr_t g_OsfpInfPage2FH[] = {
+    /* Byte 128: VDM Support */
+    {0x00, 1, ACC_RO, MEMT_SRAM, NULL,                      OPF_NONE},       /* VDMSupport/PowerSavingSupport */
+    /* Byte 129-130: FineIntervalLength */
+    {0x01, 2, ACC_RO, MEMT_SRAM, NULL,                      OPF_NONE},       /* FineIntervalLength U16BE 0.1ms */
+    /* Byte 144-145: Freeze/Unfreeze */
+    {0x10, 1, ACC_RW, MEMT_SRAM, OsfpOperate2FhFreezeReq,   OPF_IMMEDIATE},  /* FreezeRequest/UnfreezeReq */
+    {0x11, 1, ACC_RW, MEMT_SRAM, OsfpOperate2FhUnfreezeReq, OPF_IMMEDIATE},  /* FreezeDone/UnfreezeDone */
 };
 
 /* 页表索引：页号(PageSelect 值) -> 本页寄存器属性表。
@@ -318,9 +500,17 @@ CONST OsfpRegAttr_t g_OsfpInfPage11H[] = {
  *   3) Page Low 与 Page 00h 的 tab 值同为 0x00（CMIS 页号本就如此，Page
  *      Select=00h 即 Page 00h），靠宿主窗口半区区分——故下半区禁用二分；
  *   4) 各 inf 表按 offset 升序存放。 */
+/* 2026-10-12 占位补全：enum 全部槽位与页表行一一对应（行号 == ordinal == SRAM
+ * 影子槽号）。12h-2Fh(28 页)/9Fh/A0h-AFh(16 页) banked 占位 ×4、B0h-B3h 系数页
+ * 占位（unbanked）——此前这些槽零填充 tab=0x00 破坏 DtTabLeftFind 二分单调性，
+ * 尾部追加 B4H..B7H 实表时 0xB7 查找会漏命中；占位行语义同 03h-0Fh 段（num=0 →
+ * host 写丢弃、读回影子槽 boot 零镜像，区别于「页未登记」的 0xFF dummy）。 */
 CONST OsfpTabForm_t g_OsfpTabForm[PAGE_TAB_NUM] = {
     {0x00, (BYTE)(sizeof(g_OsfpInfPageLow) / sizeof(g_OsfpInfPageLow[0])), 0, g_OsfpInfPageLow},    /* [0] Page Low（unbanked） */
-    {0x00, (BYTE)(sizeof(g_OsfpInfPage00H) / sizeof(g_OsfpInfPage00H[0])), 0, g_OsfpInfPage00H},    /* [1] Page 00h（unbanked） */
+    {0x00, 0, 0, NULL},    /* [1] Page 00h（Administrative，占位 num=0——表已删
+                             * 2026-10-15，纯静态身份页无动态行为需表驱动；影子
+                             * 仍由参数区镜像载入，host 读影子/写丢弃，同 03h-0Fh
+                             * 占位段） */
     {0x01, (BYTE)(sizeof(g_OsfpInfPage01H) / sizeof(g_OsfpInfPage01H[0])), 0, g_OsfpInfPage01H},    /* [2] Page 01h（Advertising，unbanked） */
     {0x02, (BYTE)(sizeof(g_OsfpInfPage02H) / sizeof(g_OsfpInfPage02H[0])), 0, g_OsfpInfPage02H},    /* [3] Page 02h（Thresholds，unbanked） */
     /* [4..16] Page 03h-0Fh 空表占位（tab=真实页号保二分单调；num=0 → 写全
@@ -350,6 +540,310 @@ CONST OsfpTabForm_t g_OsfpTabForm[PAGE_TAB_NUM] = {
     {0x11, (BYTE)(sizeof(g_OsfpInfPage11H) / sizeof(g_OsfpInfPage11H[0])), 1, g_OsfpInfPage11H},    /* [22] Page 11h Bank1 */
     {0x11, (BYTE)(sizeof(g_OsfpInfPage11H) / sizeof(g_OsfpInfPage11H[0])), 1, g_OsfpInfPage11H},    /* [23] Page 11h Bank2 */
     {0x11, (BYTE)(sizeof(g_OsfpInfPage11H) / sizeof(g_OsfpInfPage11H[0])), 1, g_OsfpInfPage11H},    /* [24] Page 11h Bank3 */
+    /* ---- [25..204] 未实现页占位（banked 页 4 连排同 tab、banked=1；num=0 写丢弃/读影子零镜像） ---- */
+    /* [25..28] Page 12h Bank0-3（占位） */
+    {0x12, 0, 1, NULL},
+    {0x12, 0, 1, NULL},
+    {0x12, 0, 1, NULL},
+    {0x12, 0, 1, NULL},
+
+    /* [29..32] Page 13h Bank0-3（占位） */
+    {0x13, 0, 1, NULL},
+    {0x13, 0, 1, NULL},
+    {0x13, 0, 1, NULL},
+    {0x13, 0, 1, NULL},
+
+    /* [33..36] Page 14h Bank0-3（占位） */
+    {0x14, 0, 1, NULL},
+    {0x14, 0, 1, NULL},
+    {0x14, 0, 1, NULL},
+    {0x14, 0, 1, NULL},
+
+    /* [37..40] Page 15h Bank0-3（占位） */
+    {0x15, 0, 1, NULL},
+    {0x15, 0, 1, NULL},
+    {0x15, 0, 1, NULL},
+    {0x15, 0, 1, NULL},
+
+    /* [41..44] Page 16h Bank0-3（占位） */
+    {0x16, 0, 1, NULL},
+    {0x16, 0, 1, NULL},
+    {0x16, 0, 1, NULL},
+    {0x16, 0, 1, NULL},
+
+    /* [45..48] Page 17h Bank0-3（占位） */
+    {0x17, 0, 1, NULL},
+    {0x17, 0, 1, NULL},
+    {0x17, 0, 1, NULL},
+    {0x17, 0, 1, NULL},
+
+    /* [49..52] Page 18h Bank0-3（占位） */
+    {0x18, 0, 1, NULL},
+    {0x18, 0, 1, NULL},
+    {0x18, 0, 1, NULL},
+    {0x18, 0, 1, NULL},
+
+    /* [53..56] Page 19h Bank0-3（占位） */
+    {0x19, 0, 1, NULL},
+    {0x19, 0, 1, NULL},
+    {0x19, 0, 1, NULL},
+    {0x19, 0, 1, NULL},
+
+    /* [57..60] Page 1Ah Bank0-3（占位） */
+    {0x1A, 0, 1, NULL},
+    {0x1A, 0, 1, NULL},
+    {0x1A, 0, 1, NULL},
+    {0x1A, 0, 1, NULL},
+
+    /* [61..64] Page 1Bh Bank0-3（占位） */
+    {0x1B, 0, 1, NULL},
+    {0x1B, 0, 1, NULL},
+    {0x1B, 0, 1, NULL},
+    {0x1B, 0, 1, NULL},
+
+    /* [65..68] Page 1Ch Bank0-3（占位） */
+    {0x1C, 0, 1, NULL},
+    {0x1C, 0, 1, NULL},
+    {0x1C, 0, 1, NULL},
+    {0x1C, 0, 1, NULL},
+
+    /* [69..72] Page 1Dh Bank0-3（占位） */
+    {0x1D, 0, 1, NULL},
+    {0x1D, 0, 1, NULL},
+    {0x1D, 0, 1, NULL},
+    {0x1D, 0, 1, NULL},
+
+    /* [73..76] Page 20h Bank0-3（VDM Descriptors：Flash 参数区静态内容，
+     * MgiParamLoad 落影子；num=0 占位 → 写丢弃/读影子镜像，固件不初始化） */
+    {0x20, 0, 1, NULL},
+    {0x20, 0, 1, NULL},
+    {0x20, 0, 1, NULL},
+    {0x20, 0, 1, NULL},
+
+    /* [77..80] Page 21h Bank0-3（占位） */
+    {0x21, 0, 1, NULL},
+    {0x21, 0, 1, NULL},
+    {0x21, 0, 1, NULL},
+    {0x21, 0, 1, NULL},
+
+    /* [81..84] Page 22h Bank0-3（占位） */
+    {0x22, 0, 1, NULL},
+    {0x22, 0, 1, NULL},
+    {0x22, 0, 1, NULL},
+    {0x22, 0, 1, NULL},
+
+    /* [85..88] Page 23h Bank0-3（占位） */
+    {0x23, 0, 1, NULL},
+    {0x23, 0, 1, NULL},
+    {0x23, 0, 1, NULL},
+    {0x23, 0, 1, NULL},
+
+    /* [89..92] Page 24h Bank0-3（VDM Samples） */
+    {0x24, (BYTE)(sizeof(g_OsfpInfPage24H) / sizeof(g_OsfpInfPage24H[0])), 1, g_OsfpInfPage24H},
+    {0x24, 0, 1, NULL},
+    {0x24, 0, 1, NULL},
+    {0x24, 0, 1, NULL},
+
+    /* [93..96] Page 25h Bank0-3（占位） */
+    {0x25, 0, 1, NULL},
+    {0x25, 0, 1, NULL},
+    {0x25, 0, 1, NULL},
+    {0x25, 0, 1, NULL},
+
+    /* [97..100] Page 26h Bank0-3（占位） */
+    {0x26, 0, 1, NULL},
+    {0x26, 0, 1, NULL},
+    {0x26, 0, 1, NULL},
+    {0x26, 0, 1, NULL},
+
+    /* [101..104] Page 27h Bank0-3（占位） */
+    {0x27, 0, 1, NULL},
+    {0x27, 0, 1, NULL},
+    {0x27, 0, 1, NULL},
+    {0x27, 0, 1, NULL},
+
+    /* [105..108] Page 28h Bank0-3（VDM Threshold Sets：Flash 参数区静态内容，
+     * MgiParamLoad 落影子；num=0 占位 → 写丢弃/读影子镜像，host 运行时改阈值未支持） */
+    {0x28, 0, 1, NULL},
+    {0x28, 0, 1, NULL},
+    {0x28, 0, 1, NULL},
+    {0x28, 0, 1, NULL},
+
+    /* [109..112] Page 29h Bank0-3（占位） */
+    {0x29, 0, 1, NULL},
+    {0x29, 0, 1, NULL},
+    {0x29, 0, 1, NULL},
+    {0x29, 0, 1, NULL},
+
+    /* [113..116] Page 2Ah Bank0-3（占位） */
+    {0x2A, 0, 1, NULL},
+    {0x2A, 0, 1, NULL},
+    {0x2A, 0, 1, NULL},
+    {0x2A, 0, 1, NULL},
+
+    /* [117..120] Page 2Bh Bank0-3（占位） */
+    {0x2B, 0, 1, NULL},
+    {0x2B, 0, 1, NULL},
+    {0x2B, 0, 1, NULL},
+    {0x2B, 0, 1, NULL},
+
+    /* [121..124] Page 2Ch Bank0-3（VDM Flags） */
+    {0x2C, (BYTE)(sizeof(g_OsfpInfPage2CH) / sizeof(g_OsfpInfPage2CH[0])), 1, g_OsfpInfPage2CH},
+    {0x2C, 0, 1, NULL},
+    {0x2C, 0, 1, NULL},
+    {0x2C, 0, 1, NULL},
+
+    /* [125..128] Page 2Dh Bank0-3（VDM Masks） */
+    {0x2D, (BYTE)(sizeof(g_OsfpInfPage2DH) / sizeof(g_OsfpInfPage2DH[0])), 1, g_OsfpInfPage2DH},
+    {0x2D, 0, 1, NULL},
+    {0x2D, 0, 1, NULL},
+    {0x2D, 0, 1, NULL},
+
+    /* [129..132] Page 2Eh Bank0-3（占位） */
+    {0x2E, 0, 1, NULL},
+    {0x2E, 0, 1, NULL},
+    {0x2E, 0, 1, NULL},
+    {0x2E, 0, 1, NULL},
+
+    /* [133..136] Page 2Fh Bank0-3（VDM Advertisement + Freeze/Unfreeze） */
+    {0x2F, (BYTE)(sizeof(g_OsfpInfPage2FH) / sizeof(g_OsfpInfPage2FH[0])), 1, g_OsfpInfPage2FH},
+    {0x2F, 0, 1, NULL},
+    {0x2F, 0, 1, NULL},
+    {0x2F, 0, 1, NULL},
+
+    /* [137..140] Page 9Fh Bank0-3（CDB 消息页：CMDID 写触发/头+LPL；四 bank
+     * 共用 g_OsfpInfPage9FH，见 ral.h「9Fh 布局」块） */
+    {0x9F, (BYTE)(sizeof(g_OsfpInfPage9FH) / sizeof(g_OsfpInfPage9FH[0])), 1, g_OsfpInfPage9FH},
+    {0x9F, (BYTE)(sizeof(g_OsfpInfPage9FH) / sizeof(g_OsfpInfPage9FH[0])), 1, g_OsfpInfPage9FH},
+    {0x9F, (BYTE)(sizeof(g_OsfpInfPage9FH) / sizeof(g_OsfpInfPage9FH[0])), 1, g_OsfpInfPage9FH},
+    {0x9F, (BYTE)(sizeof(g_OsfpInfPage9FH) / sizeof(g_OsfpInfPage9FH[0])), 1, g_OsfpInfPage9FH},
+
+    /* [141..144] Page A0h Bank0-3（占位） */
+    {0xA0, 0, 1, NULL},
+    {0xA0, 0, 1, NULL},
+    {0xA0, 0, 1, NULL},
+    {0xA0, 0, 1, NULL},
+
+    /* [145..148] Page A1h Bank0-3（占位） */
+    {0xA1, 0, 1, NULL},
+    {0xA1, 0, 1, NULL},
+    {0xA1, 0, 1, NULL},
+    {0xA1, 0, 1, NULL},
+
+    /* [149..152] Page A2h Bank0-3（占位） */
+    {0xA2, 0, 1, NULL},
+    {0xA2, 0, 1, NULL},
+    {0xA2, 0, 1, NULL},
+    {0xA2, 0, 1, NULL},
+
+    /* [153..156] Page A3h Bank0-3（占位） */
+    {0xA3, 0, 1, NULL},
+    {0xA3, 0, 1, NULL},
+    {0xA3, 0, 1, NULL},
+    {0xA3, 0, 1, NULL},
+
+    /* [157..160] Page A4h Bank0-3（占位） */
+    {0xA4, 0, 1, NULL},
+    {0xA4, 0, 1, NULL},
+    {0xA4, 0, 1, NULL},
+    {0xA4, 0, 1, NULL},
+
+    /* [161..164] Page A5h Bank0-3（占位） */
+    {0xA5, 0, 1, NULL},
+    {0xA5, 0, 1, NULL},
+    {0xA5, 0, 1, NULL},
+    {0xA5, 0, 1, NULL},
+
+    /* [165..168] Page A6h Bank0-3（占位） */
+    {0xA6, 0, 1, NULL},
+    {0xA6, 0, 1, NULL},
+    {0xA6, 0, 1, NULL},
+    {0xA6, 0, 1, NULL},
+
+    /* [169..172] Page A7h Bank0-3（占位） */
+    {0xA7, 0, 1, NULL},
+    {0xA7, 0, 1, NULL},
+    {0xA7, 0, 1, NULL},
+    {0xA7, 0, 1, NULL},
+
+    /* [173..176] Page A8h Bank0-3（占位） */
+    {0xA8, 0, 1, NULL},
+    {0xA8, 0, 1, NULL},
+    {0xA8, 0, 1, NULL},
+    {0xA8, 0, 1, NULL},
+
+    /* [177..180] Page A9h Bank0-3（占位） */
+    {0xA9, 0, 1, NULL},
+    {0xA9, 0, 1, NULL},
+    {0xA9, 0, 1, NULL},
+    {0xA9, 0, 1, NULL},
+
+    /* [181..184] Page AAh Bank0-3（占位） */
+    {0xAA, 0, 1, NULL},
+    {0xAA, 0, 1, NULL},
+    {0xAA, 0, 1, NULL},
+    {0xAA, 0, 1, NULL},
+
+    /* [185..188] Page ABh Bank0-3（占位） */
+    {0xAB, 0, 1, NULL},
+    {0xAB, 0, 1, NULL},
+    {0xAB, 0, 1, NULL},
+    {0xAB, 0, 1, NULL},
+
+    /* [189..192] Page ACh Bank0-3（占位） */
+    {0xAC, 0, 1, NULL},
+    {0xAC, 0, 1, NULL},
+    {0xAC, 0, 1, NULL},
+    {0xAC, 0, 1, NULL},
+
+    /* [193..196] Page ADh Bank0-3（占位） */
+    {0xAD, 0, 1, NULL},
+    {0xAD, 0, 1, NULL},
+    {0xAD, 0, 1, NULL},
+    {0xAD, 0, 1, NULL},
+
+    /* [197..200] Page AEh Bank0-3（占位） */
+    {0xAE, 0, 1, NULL},
+    {0xAE, 0, 1, NULL},
+    {0xAE, 0, 1, NULL},
+    {0xAE, 0, 1, NULL},
+
+    /* [201..204] Page AFh Bank0-3（占位） */
+    {0xAF, 0, 1, NULL},
+    {0xAF, 0, 1, NULL},
+    {0xAF, 0, 1, NULL},
+    {0xAF, 0, 1, NULL},
+
+    /* [205] Page B0h（占位：厂商系数页本体未建表——mal-monitor 经 ReadSramProtocolMsaSpace 直读影子；host 读影子零镜像/写丢弃） */
+    {0xB0, 0, 0, NULL},
+
+    /* [206] Page B1h（占位：厂商系数页本体未建表——mal-monitor 经 ReadSramProtocolMsaSpace 直读影子；host 读影子零镜像/写丢弃） */
+    {0xB1, 0, 0, NULL},
+
+    /* [207] Page B2h（占位：厂商系数页本体未建表——mal-monitor 经 ReadSramProtocolMsaSpace 直读影子；host 读影子零镜像/写丢弃） */
+    {0xB2, 0, 0, NULL},
+
+    /* [208] Page B3h（占位：厂商系数页本体未建表——mal-monitor 经 ReadSramProtocolMsaSpace 直读影子；host 读影子零镜像/写丢弃） */
+    {0xB3, 0, 0, NULL},
+
+    /* [209] Page B4h（B4H DRV(GN1848) 寄存器初始化表；四页共用 g_OsfpInfPageBxH，64×2B ACC_RW/MEMT_SRAM） */
+    {0xB4, (BYTE)(sizeof(g_OsfpInfPageBxH) / sizeof(g_OsfpInfPageBxH[0])), 0, g_OsfpInfPageBxH},
+
+    /* [210] Page B5h（B5H DRV 初始化扩展页（预留，同布局）；四页共用 g_OsfpInfPageBxH，64×2B ACC_RW/MEMT_SRAM） */
+    {0xB5, (BYTE)(sizeof(g_OsfpInfPageBxH) / sizeof(g_OsfpInfPageBxH[0])), 0, g_OsfpInfPageBxH},
+
+    /* [211] Page B6h（B6H TIA(GN1816) 寄存器初始化表；四页共用 g_OsfpInfPageBxH，64×2B ACC_RW/MEMT_SRAM） */
+    {0xB6, (BYTE)(sizeof(g_OsfpInfPageBxH) / sizeof(g_OsfpInfPageBxH[0])), 0, g_OsfpInfPageBxH},
+
+    /* [212] Page B7h（B7H TIA 初始化扩展页；四页共用 g_OsfpInfPageBxH，64×2B ACC_RW/MEMT_SRAM） */
+    {0xB7, (BYTE)(sizeof(g_OsfpInfPageBxH) / sizeof(g_OsfpInfPageBxH[0])), 0, g_OsfpInfPageBxH},
+    /* [213] Page D9h（D9H 通用芯片/GPIO/DAC/ADC 读写邮箱：0x00-0x0C CHIP 记录——REGADDR 写触发读/
+     * REGVALUE 写触发写/REGRBVALUE 回填 host RO（OPF_DEFERRED）+ 0x0D-0x0F GPIO 记录——
+     * GPIOID 写触发读/GPIOSTATUS 回填、GPIOVALUE 写触发写（OPF_IMMEDIATE）+ 0x10-0x18 DAC 记录——
+     * DACID 写触发读/DACRDVALUE 回填、DACVALUE 写触发写（OPF_DEFERRED）+ 0x19-0x1D ADC 记录——
+     * ADCID 写触发读/ADCVALUE 回填（OPF_DEFERRED）；0x1E-0x7F 保留；
+     * 布局见 ral.h） */
+    {0xD9, (BYTE)(sizeof(g_OsfpInfPageD9H) / sizeof(g_OsfpInfPageD9H[0])), 0, g_OsfpInfPageD9H},
 };
 
 /* 编译期一致性断言：g_OsfpTabForm[] 元素数必须与 TabIndex_t 的

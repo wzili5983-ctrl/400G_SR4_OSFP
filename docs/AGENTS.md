@@ -65,9 +65,11 @@ Chip 读写路径：业务代码 → `WriteChip` / `ReadChip` → `GetChipInfoBy
 
 ```c
 STATIC CONST ChipInfo_t g_ChipInfoImpl[CHIP_ID_NUM - CHIP_ID_START] = {
-    {{CHIP_ID_DSP, BUS_ID_DSP}, {DspWrite, DspRead, InitDspBus}},
-    {{CHIP_ID_DRV, BUS_ID_DRV}, {NULL, NULL, InitInnerBus}},
-    {{CHIP_ID_TIA, BUS_ID_TIA}, {NULL, NULL, InitInnerBus}}
+    {{CHIP_ID_DSP, BUS_ID_DSP}, {DspWrite, DspRead, InitDsp}},
+    {{CHIP_ID_DRV, BUS_ID_DRV}, {DrvWrite, DrvRead, InitDrv}},
+    {{CHIP_ID_TIA, BUS_ID_TIA}, {TiaWrite, TiaRead, InitTia}},
+    {{CHIP_ID_PMIC, BUS_ID_PMIC}, {PmicWrite, PmicRead, InitPmic}},
+    {{CHIP_ID_EXTFLASH, BUS_ID_EXTFLASH}, {ExtFlashWrite, ExtFlashRead, InitExtFlash}}
 };
 
 CONST ChipInfo_t *GetChipInfoById(BYTE id)
@@ -104,6 +106,7 @@ Chip 查询必须先保证 `CHIP_ID_START <= id < CHIP_ID_NUM`，再使用 `id -
 - `ChipWrite` / `ChipRead` 接收芯片 ID、寄存器地址及数据或输出指针；`ChipInit` 仅接收 `rsttype`，回调声明、定义和操作表签名必须一致。
 - DSP 读写通过 `BcmArmWrite` / `BcmArmRead` 完成，将驱动返回的 `0` 转为 `OK`，其他值转为 `ERR`；读取成功后再把临时结果写入输出指针。
 - DRV、TIA 当前仅配置总线初始化，读写回调保持 `NULL`。已知 I2C 地址不足以推断寄存器协议，不默认使用 8 位寄存器；实现读写前须确认器件协议，并按需使用 `WriteBus` / `ReadBus`。
+- U15（SST25PF040C，512KB 外部 SPI NOR Flash，DSP 启动 Flash）挂在 BUS_ID_EXTFLASH（硬件 SPI2：SCK=PG9/MOSI=PG11/MISO=PG10，CS=PG12=GPIO_ID_EXTFLASH_CS，低有效）。**该总线 SCK/MOSI/MISO 与 CS 网络均与 DSP（U11）SPI 主控共享（DSP 从 U15 自举微码）**——MCU 侧任何引脚都不得常占：每次访问由 driver/extflash 现取现放（Acquire：CS 网络→输出高、SPI2→AF 主控；Release：全部回 Hi-Z 输入；CS 在 GPIO 资源表保持输入默认）。调用前提：DSP 复位保持中，或启动完成后其 SPI 主控空闲（实机验证）；DSP 微码升级流程 = 复位 DSP → 编程 U15 → 释放复位让 DSP 自举新镜像。器件特性（Microchip DS20005397F）：**WP#/HOLD# 外接 3.3V（2026-10-16 用户定案）——状态寄存器常可写（BPL 锁不生效）、HOLD# 常失效**；BP0-2/TB/BPL 为非易失位，上电保护等级=上次编程值（不定），init 时 RDSR 读回 BP/TB 非零才 WREN+WRSR 00h 清一次；WRSR 需 WREN 前置且一次总线周期只写 1 字节状态（跨周期不识别）；命令集 WREN 06h/WRDI 04h/RDSR 05h/WRSR 01h/READ 03h（上限 25 MHz）/PP 02h/SE 20h(4KB，D7h 为别名)/BE D8h(64KB，唯一块擦除——52h 本料号不存在)/CE 60h(C7h 别名)/RDID 9Fh（**62 06 13 00 循环输出**，非 BF 25 8D；90h Read-ID 本料号也不存在）；PP 上限 256B 且页内回卷、编程不得跨 256B 页；擦除时序 4KB typ 40/max 150ms、64KB typ 80/max 250ms、整片 typ 250ms/max 2s——**无擦除挂起**，整片擦除最长占线 2s，升级流程的喂狗预算须覆盖。上电 TPU≥100µs 后才允许首条指令（本链路秒级后运行，天然满足）。NOR 命令+地址+数据必须同一次 CS 会话，`WriteBus`/`ReadBus` 的逐次 CS 包裹不满足时序，故 extflash 驱动绕过总线层、经 `mcu_spi` 直发并自驱 CS 网络（不经 GPIO 资源层写，因为该脚在资源表是输入）。
 
 ## 新增资源
 

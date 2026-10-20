@@ -35,6 +35,9 @@
 #include "bcm_arm_platform.h"
 #include "bcm_gd32_i2c.h"
 #include "drv.h"
+#include "odsp_init.h"
+#include "pmic.h"
+#include "extflash.h"
 #include "tia.h"
 
 STATIC DWORD DspWrite(BYTE id, DWORD addr, DWORD data);
@@ -48,7 +51,22 @@ STATIC CONST ChipInfo_t g_ChipInfoImpl[CHIP_ID_NUM - CHIP_ID_START] = {
     {{CHIP_ID_DRV, BUS_ID_DRV}, {DrvWrite, DrvRead, InitDrv}},
     /* GN1816 (Semtech) TIA: 8-bit registers, 7-bit address 0x5B on
      * BUS_ID_TIA, single-register read/write via tia.c. */
-    {{CHIP_ID_TIA, BUS_ID_TIA}, {TiaWrite, TiaRead, InitTia}}
+    {{CHIP_ID_TIA, BUS_ID_TIA}, {TiaWrite, TiaRead, InitTia}},
+    /* SY70300B (Silergy) quad buck PMIC: 8-bit registers, 7-bit address 0x1E
+     * (internal MTP default) on BUS_ID_PMIC, single-register read/write via
+     * pmic.c; rails come up by OTP config after the global EN pin, so the
+     * driver only verifies liveness here. EN <- GPIO_ID_CDR_LD_EN (PB11),
+     * WDG_RST <- GPIO_ID_WDOG_RST (PB12); INT pin unconnected. */
+    {{CHIP_ID_PMIC, BUS_ID_PMIC}, {PmicWrite, PmicRead, InitPmic}},
+    /* U15 (SST25PF040C, 512KB external SPI NOR flash): boots the DSP on
+     * BUS_ID_EXTFLASH (SPI2, CS=PG12). The DSP SPI master shares the bus;
+     * 32-bit word R/W plus bulk program/erase API in driver/extflash.
+     * Registered after the DSP in the InitChip chain — a live DSP already
+     * proves U15 delivered a boot image, so this init never faults the
+     * module (RDID is informational, power-on block protection is cleared
+     * best-effort). Also host-reachable through the D9H mailbox CHIP
+     * record (CHIPID=n). */
+    {{CHIP_ID_EXTFLASH, BUS_ID_EXTFLASH}, {ExtFlashWrite, ExtFlashRead, InitExtFlash}}
 };
 
 CONST ChipInfo_t *GetChipInfo(VOID)
@@ -67,7 +85,10 @@ STATIC DWORD InitDsp(BYTE rsttype)
     /* The DSP memory path (DspWrite/DspRead via BcmArm*) runs on I2C0 through
      * the bcm driver; initialize it here instead of the bus resource layer. */
     BcmGd32I2cInit();
-    return OK;
+    /* BCM87420 上电初始化：等内部轨稳定 + BSC liveness 读 + datapath 配置
+     * 序列（★配置序列占位，待 Broadcom bring-up 文档）。返回 ERR 时
+     * InitChip 上抛 → msm_pwr_seq 判 fault 38。 */
+    return OdspInit();
 }
 
 STATIC DWORD DspWrite(BYTE id, DWORD addr, DWORD data)

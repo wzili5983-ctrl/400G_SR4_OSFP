@@ -34,6 +34,7 @@
 #define ADCRESOURCE_IMPL_H
 
 #include "basedef.h"
+#include "monitor_impl.h"
 
 typedef enum {
     MCU_AD_SAMPLE_GROUP,
@@ -72,44 +73,14 @@ typedef enum {
     ADC_ID_NUM
 }AdcId_t;
 
-typedef enum {
-    ADC_MSA_ID_RSSI0=0,
-    ADC_MSA_ID_RSSI1,
-    ADC_MSA_ID_RSSI2,
-    ADC_MSA_ID_RSSI3,
-    ADC_MSA_ID_LASER_BIAS0,
-    ADC_MSA_ID_LASER_BIAS1,
-    ADC_MSA_ID_LASER_BIAS2,
-    ADC_MSA_ID_LASER_BIAS3,
-    ADC_MSA_ID_PWR_TX1,
-    ADC_MSA_ID_PWR_TX2,
-    ADC_MSA_ID_PWR_TX3,
-    ADC_MSA_ID_PWR_TX4,
-    ADC_MSA_ID_LASER_TEMP,
-    
-    ADC_MSA_ID_CURRENT_MAIN,
-    ADC_MSA_ID_CURRENT_DSP,
-    ADC_MSA_ID_MODULE_TEMP,
-    ADC_MSA_ID_VCC_MON,
-    ADC_MSA_ID_V5_VPD_MON,
-    ADC_MSA_ID_V3P3_RAIL_MON,
-    ADC_MSA_ID_V3P3_PHY_MON,
-    ADC_MSA_ID_V1P8_MON,
-    ADC_MSA_ID_NUM
-}AdcMsaId_t;
-
-/* adindex 的「无采集源」标记（如 DSP 上报量、SR4 无实体的 lane5-8）：
- * 0xFF 超出 AdcMsaId_t 值域，GetAdcMsaFilteredValue 的界检查会拒收。 */
-#define NO_ADC_MSA_ID   0xFFU
-
 typedef AdcId_t ADC_ID_ENUM;
 #define ADC_ID_0 ADC_ID_RSSI01_HIGH
 
 CONST AdcInfo_t *GetAdcInfo(BYTE id);
-/* 读 AdcMsaId_t 槽的滤波值：MAL 监视任务按 g_StdPerfMon[].adindex 消费
- * （adindex 取值空间 = AdcMsaId_t；NO_ADC_MSA_ID 表无采集源）。 */
+/* 读 MsaMonitorId_t 槽的滤波值：MAL 监视任务按 g_StdPerfMon[].adindex 消费
+ * （adindex 取值空间 = MsaMonitorId_t；NO_MON_MSA_ID 表无采集源）。 */
 DWORD GetAdcMsaFilteredValue(BYTE msaId, WORD *value);
-/* 写 AdcMsaId_t 槽：GN1848 监视任务（driver/drv TaskTxAdSamples）等非
+/* 写 MsaMonitorId_t 槽：GN1848 监视任务（driver/drv TaskTxAdSamples）等非
  * MCU-ADC 源的落槽入口；仅界检查，不依赖 ADC 初始化状态。 */
 DWORD SetAdcMsaFilteredValue(BYTE msaId, WORD value);
 

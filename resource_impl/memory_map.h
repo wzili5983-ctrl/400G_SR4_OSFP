@@ -65,10 +65,10 @@
 #define MEM_APP_A_BASE              0x08010000U             /* P8 */
 #define MEM_APP_SLOT_SIZE           0x0002E000U             /* 184KB, 23 pages */
 
-/* P31-P53: APP slot B, 184KB, the A-mirror region and the SOLE upgrade
- * entry: every APP upgrade (including the factory / blank-device case) is
- * received into B first, and B always holds the A-named image, byte-
- * identical to slot A; there is no B-named package. */
+/* P31-P53: APP slot B, 184KB, the A-mirror region and the SOLE APP upgrade
+ * receive region: every APP upgrade (including the factory / blank-device
+ * case) is received into B first. Its logical header always declares
+ * FLASH_TYPE_APP + MEM_APP_A_BASE, so B can be promoted to A verbatim. */
 #define MEM_APP_B_BASE              0x0803E000U             /* P31 */
 
 /* P54-P57: user parameters main, 32KB. */
@@ -82,6 +82,14 @@
 #define MEM_MISC_A_BASE             0x0807C000U             /* P62 */
 #define MEM_MISC_B_BASE             0x0807E000U             /* P63 */
 #define MEM_MISC_SIZE               MEM_FLASH_PAGE_SIZE     /* 8KB each */
+
+/* U15 (SST25PF040C) DSP firmware image, in the external NOR's own address
+ * space. The DSP raw boot payload starts at offset 0; the last 4KB sector is
+ * reserved for the CDB management frame, so the payload never overlaps it. */
+#define MEM_DSP_FW_BASE             0x00000000U
+#define MEM_DSP_FW_SIZE             0x00080000U             /* 512KB */
+#define MEM_DSP_FW_META_BASE        0x0007F000U             /* last 4KB sector */
+#define MEM_DSP_FW_PAYLOAD_CAP      MEM_DSP_FW_META_BASE
 
 /* ==================== SRAM 布局（0x2000_0000 - 0x2002_0000, 128KB） ====================
  *

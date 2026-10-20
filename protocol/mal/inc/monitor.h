@@ -39,7 +39,7 @@ extern volatile BYTE g_MonIntPending;
 VOID MonInit(VOID);
 
 /** MAL 监视任务体（调度器周期回调；也可脱离调度器直接周期调用）：
- *  1. adindex = NO_ADC_MSA_ID 的条目整项跳过（无采集源）；
+ *  1. adindex = NO_MON_MSA_ID 的条目整项跳过（无采集源）；
  *  2. cal != NULL：调 cal(info)——内部经 adindex 读 ADC 滤波值、标定、
  *     编码入 value.perfvalue；cal = NULL：MonDefaultConvert 默认换算
  *     （★ 各量纲默认换算系数未拍板，暂返回 ERR 跳过本次发布）；

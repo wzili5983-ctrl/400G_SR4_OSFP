@@ -58,6 +58,11 @@ typedef enum {
     CHIP_ID_DSP = CHIP_ID_START,
     CHIP_ID_DRV,
     CHIP_ID_TIA,
+    CHIP_ID_PMIC,
+    /* U15: SST25PF040C 512KB external SPI NOR flash, boots the DSP (U11).
+     * Lives on BUS_ID_EXTFLASH (SPI2, shared with the DSP SPI master);
+     * accessed via driver/extflash. */
+    CHIP_ID_EXTFLASH,
     CHIP_ID_NUM
 }CHIP_ID_ENUM;
 

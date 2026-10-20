@@ -12,6 +12,7 @@
 - [Protocol MSA space（management map SRAM 影子）](#protocol-msa-spacemanagement-map-sram-影子)
 - [镜像与运行期内存约定（工具链视角）](#镜像与运行期内存约定工具链视角)
 - [中断向量表与 VTOR 重定位](#中断向量表与-vtor-重定位)
+- [Bootloader（救援模式，2026-10-14 落地）](#bootloader救援模式2026-10-14-落地)
 - [维护说明](#维护说明)
 
 ## Flash 整体布局与分区
@@ -58,13 +59,13 @@ GD32E511 主存储区共 **512KB**，起始地址 `0x08000000`，结束于 `0x08
 
 ### 分区总表
 
-11 个分区由 `g_FlashInfoImpl` 表驱动定义，`flashid` 与 `FlashId_t` 枚举值一一对应且即数组下标（`resource_impl/flashresource_impl.c:52-64, 66-73`；`resource_impl/flashresource_impl.h:196-209`）。
+`g_FlashInfoImpl` 现包含 **12 个物理资源**：11 个片上 Flash 分区，以及独立 NOR 偏移地址空间中的 U15 DSP 固件区。`flashid` 与 `FlashId_t` 枚举值一一对应且即数组下标；`FrameHead_t.type/storeaddr` 描述逻辑镜像，不再用帧头字段直接表示物理 `FlashId_t`。
 
 | # | 分区 | FLASH_ID | 地址范围 | 大小 | 页号 | WRP | 用途 | 所有者 |
 |---|------|----------|----------|------|------|-----|------|--------|
 | 0 | Bootloader | `FLASH_ID_BOOTLOADER` | 0x08000000–0x08007FFF | 32KB（0x8000） | P0–P3 | 是 | 引导程序、升级 B→A 搬运 | BL |
 | 1 | 密钥/设备身份 | `FLASH_ID_KEY` | 0x08008000–0x08009FFF | 8KB（0x2000） | P4 | 是 | 密钥、设备身份信息 | BL |
-| 2 | OTA 元数据 J-A | `FLASH_ID_METADATA_A` | 0x0800A000–0x0800BFFF | 8KB（0x2000） | P5 | 否 | `OtaInfo_t` APP 升级记录（页基址处，128B） | APP（OTA） |
+| 2 | OTA 元数据 J-A | `FLASH_ID_METADATA_A` | 0x0800A000–0x0800BFFF | 8KB（0x2000） | P5 | 否 | `OtaInfo_t` APP 升级记录（页基址处，64B） | APP（OTA） |
 | 3 | OTA 元数据 J-B | `FLASH_ID_METADATA_B` | 0x0800C000–0x0800DFFF | 8KB（0x2000） | P6 | 否 | 保留 | —（保留） |
 | 4 | 黑匣子/诊断 | `FLASH_ID_BLACKBOX` | 0x0800E000–0x0800FFFF | 8KB（0x2000） | P7 | 否 | 诊断/黑匣子日志 | APP |
 | 5 | APP Slot A | `FLASH_ID_APP_A` | 0x08010000–0x0803DFFF | 184KB（0x2E000，23 页） | P8–P30 | 否 | 固定运行区（始终从此运行） | APP（BL 负责升级时 B→A 拷贝） |
@@ -73,55 +74,88 @@ GD32E511 主存储区共 **512KB**，起始地址 `0x08000000`，结束于 `0x08
 | 8 | 用户参数·备份 | `FLASH_ID_PARA_B` | 0x08074000–0x0807BFFF | 32KB（0x8000，4 页） | P58–P61 | 否 | 用户参数备份 | APP |
 | 9 | 其他参数 J-A | `FLASH_ID_MISC_A` | 0x0807C000–0x0807DFFF | 8KB（0x2000） | P62 | 否 | 杂项参数日志页 A | APP |
 | 10 | 其他参数 J-B | `FLASH_ID_MISC_B` | 0x0807E000–0x0807FFFF | 8KB（0x2000） | P63 | 否 | 杂项参数日志页 B | APP |
+| 11 | U15 DSP 固件 | `FLASH_ID_DSP_FW` | NOR offset 0x00000000–0x0007FFFF | 512KB（0x80000） | 外部 NOR | 否 | DSP raw 启动负载 + CDB 管理帧 | APP（BL 无读写擦操作） |
 
 注：所有者列按源码注释与升级流程归属推断（如 OTA 元数据 J-A 注释为 "APP 升级信息"，`resource_impl/memory_map.h:16`；B→A 提升由 Bootloader 执行，`resource/flashresource.h:79-81`），源码未对每区逐一显式声明所有者。
 
 ### A/B 双槽升级约定（fixed-A / mirror-B）
 
-本项目采用固定 A / 镜像 B 方案（fixed-A / mirror-B），源码注释明确写明以下约定：
+本项目采用固定 A / 镜像 B 方案（fixed-A / mirror-B）：
 
-1. **Slot A 是固定运行区，Slot B 是 A 镜像区和唯一升级入口（SOLE upgrade entry）**：任何 APP 升级——包括出厂/空片首次升级——都必须先接收到 B；不存在 B 命名的升级包（`resource_impl/memory_map.h:68-71`；`resource/flashresource.h:60-65`）。
-2. **升级包必为 A 命名且与 A 字节一致**：包内帧头 `FrameHead_t.flashid == FLASH_ID_APP_A` 且 `storeaddr == MEM_APP_A_BASE`，镜像内容与 Slot A 字节级一致。校验逻辑见 `FrameTargetsSlot`——Slot B 只收 A 名包，其余分区只收自命名头（`resource_impl/flashresource_impl.c:102-119`）。
-3. **接收门 + 校验先行**：`VerifyFrameHdrBuf` 在 SRAM OTA 接收缓冲内先验 128B 帧头（magic/定向规则/几何/头 CRC32），通过后才允许向 slot 写第一字节；`InstallSlotImage` 在擦除 slot 前再完成 payload CRC32（`crc32data`）校验（`resource_impl/flashresource_impl.c:313-328, 330-360`）。
-4. **掉电安全**：装包时先写 payload、最后写 512B 帧头区作为提交标记，中途掉电只会留下旧镜像或无帧头（校验必拒）的空槽，不会出现新旧混合的半成品（`resource_impl/flashresource_impl.c:366-377`）。
-5. **确认后 BL 提升 B→A**：APP 确认升级后，Bootloader 将 B 逐字节拷贝到 A（帧头已是 A 命名，无需改写），稳态不变量为 **Slot A == Slot B**（`resource/flashresource.h:77-81`；`resource_impl/flashresource_impl.h:225-230`）。
-6. **无 ping-pong、无回滚状态机**：OTA 元数据 J-A 在升级期间仅保存单条 128B `OtaInfo_t` 记录（含 `rx_done` 断点续传进度），J-B 保留（`resource/flashresource.h:54-58`；`resource_impl/flashresource_impl.h:90-122`）。
+1. **Slot A 是固定运行区，Slot B 是唯一 APP 升级接收区**：任何 APP 升级——包括出厂/空片首次升级——都必须先接收到 B；CDB 不支持直接写 APP_A。
+2. **APP 包只有一种逻辑定向**：帧头必须为 `FrameHead_t.type == FLASH_TYPE_APP` 且 `storeaddr == MEM_APP_A_BASE`。该逻辑头同时被 APP_A/APP_B 的 `FrameTargetsSlot` 接受，因此 BL 可把 B 原样复制到 A；不存在 `storeaddr == MEM_APP_B_BASE` 的 APP 包。
+3. **接收门 + 校验先行**：`VerifyFrameHdrBuf` 先验 112B 帧头（company/type+storeaddr/几何/头 CRC32），通过后才允许擦写目标；`InstallSlotImage` 还会在擦除前完成 payload CRC32（`crc32data`）校验。
+4. **掉电安全**：装包时先写 payload、最后写 512B 帧头区作为提交标记，中途掉电只会留下旧镜像或无有效帧头的目标，不会被深校验当作完整新镜像。
+5. **确认后 BL 提升 B→A**：仅 APP_B 的 CDB Run 写 `OtaInfo_t` 确认记录；Bootloader 随后将 B 原样拷贝到 A，稳态不变量为 **Slot A == Slot B**。
+6. **无 ping-pong、无回滚状态机**：OTA 元数据 J-A 仅保存单条 64B `OtaInfo_t` 确认记录（另带持久化 `update_cnt`），J-B 保留。
+
+### CDB 逻辑定向与物理目标
+
+CDB 0101h Start 从 `VendorData[112]` 取得模块原生小端 `FrameHead_t`，按 `(type, storeaddr)` 精确查表并锁存物理目标；后续 0103h/0107h/0109h 不再重新路由。标准 CDB `ImageSize` 字段仍为大端，且必须等于 `fwsize`（兼容 `fwsize + 0x200` 的整帧口径）。
+
+| 逻辑 `type` | 逻辑 `storeaddr` | 物理写入目标 | APP 运行态 | BL 救援态 |
+|---|---|---|---|---|
+| `FLASH_TYPE_APP` | `MEM_APP_A_BASE` (0x08010000) | `FLASH_ID_APP_B` | 支持 | 支持 |
+| `FLASH_TYPE_PARAM` | `MEM_PARAM_MAIN_BASE` (0x0806C000) | `FLASH_ID_PARA_A` | 支持 | 支持 |
+| `FLASH_TYPE_PARAM` | `MEM_PARAM_BACKUP_BASE` (0x08074000) | `FLASH_ID_PARA_B` | 支持 | 支持 |
+| `FLASH_TYPE_EXTFLASH` | `MEM_DSP_FW_BASE` (0) | `FLASH_ID_DSP_FW` / U15 | 支持 | **拒绝** |
+
+其他组合在擦除前拒绝。有效的新 Start 在修改目标上下文前先作废旧会话；后续 GPIO/U15 初始化/擦除失败均保持 `IDLE + rxDone=0 + Ready=0`，0103h 不会沿用旧偏移写新目标。PARA_A/PARA_B 与 DSP_FW 的 Run 只注册 MCU 复位，不写 APP 的 `OtaInfo_t`；PARA_B 不会因此自动提升为 PARA_A。BL 虽保留相同的 `FLASH_ID_DSP_FW` 枚举与资源表项，但其 EXTFLASH Read/Write/Erase ops 为 `NULL`，且 CDB 上下文门先行返回不支持。
+
+### U15 DSP 固件布局
+
+U15 为 SST25PF040C 512KB NOR，使用独立于 MCU 地址空间的偏移编址：
+
+```
+NOR offset 0x00000  +------------------------------+
+                    | DSP raw boot payload         |  从 0 开始，最大 0x7F000 B
+NOR offset 0x7F000  +------------------------------+
+                    | 512B CDB 管理帧头区           |  最后一个 4KB 扇区起点
+                    | 其余保留                     |
+NOR offset 0x80000  +------------------------------+
+```
+
+打包器生成的 framed 文件仍是“512B 帧头区 + raw payload”的 **CDB 传输包**，不能把整个 framed 文件原样烧到 U15 offset 0。固件在 0103h 将 payload 写到 NOR offset 0 起，在 0107h 将 512B 帧头区写到 `0x7F000`，再经 `VerifyFramedImage` 分块回读校验。DSP_FW Start 会先保持 DSP 复位并暂停 ODSP 周期访问；MSM 在 LOW_PWR 禁止重新进入 PWR_UP，已在 PWR_UP 的序列则冻结且不计超时，避免 DSP_RELEASE/CHIP_INIT 与 U15 擦写争用。Abort 不释放该升级状态，只有 MCU 复位后重新走启动流程。
 
 ### 8KB 页擦除粒度对参数区设计的意义
 
 - **擦除以分区为单位整区逐页进行**：`EraseFlash` 对区域内每一页执行 `fmc_page_erase`，无子页擦除 API；因此任何一条记录的改写，最小代价就是其所在整页 8KB 的擦除（`resource_impl/flashresource_impl.c:225-249`）。
-- **小记录也按页管理**：OTA 元数据 J-A 的 `OtaInfo_t` 仅 128B，但每次重写前都要整页擦除、页内其余保持 0xFF——这是围绕 8KB 粒度设计的直接例证（`resource_impl/flashresource_impl.h:92-96`）。
+- **小记录也按页管理**：OTA 元数据 J-A 的 `OtaInfo_t` 仅 64B，但每次重写前都要整页擦除、页内其余保持 0xFF——这是围绕 8KB 粒度设计的直接例证（`resource_impl/flashresource_impl.h:94-102`）。
 - **参数区采用主/备整区成对 + SRAM 镜像**：用户参数做成 32KB 主 + 32KB 备份（各 4 页），并配 32KB SRAM 参数缓冲 `MEM_PARAM_BUF` 与 Flash 主参数区一一对应，APP 在 RAM 中积累修改后整块写回 Flash，把页擦除次数降到最低（`resource_impl/memory_map.h:74-79, 158-160`）。
 - **杂项参数用 J-A/J-B 双 8KB 页日志对**：按页粒度翻转写，避免在同一页内反复擦写。
 - **编程粒度约束**：FMC 按 64 位双字编程，`offset/len` 必须 8 字节对齐（`FLASH_PROGRAM_UNIT = 8`，`resource_impl/flashresource_impl.c:42-43, 189-191`）；擦除后空区在偏移 0 读出 `crc32data = 0xFF…`，任何帧头校验必失败，天然充当"空槽"判定（`resource_impl/flashresource_impl.h:48-49`）。
-- **6 个用户可升级区共用帧格式**：APP/PARA/MISC 的 A/B 六区在各自基地址携带 512B 帧头区（128B `FrameHead_t` + 0xFF 填充），payload 位于 +0x200；`fwsize` 上限 = 分区大小 − 512B 且 8 字节对齐（`resource_impl/flashresource_impl.h:51-52, 165-168`；`resource_impl/flashresource_impl.c:273-275`）。所有 CRC32 使用片上 CRC 约定（poly 0x04C11DB7、init 0xFFFFFFFF、无反射），打包工具须同约定（`resource_impl/flashresource_impl.c:121-124`）。
+- **内部 framed 区共用帧格式**：APP/PARA/MISC 的 A/B 六区在各自基地址携带 512B 帧头区（112B `FrameHead_t` + 0xFF 填充），payload 位于 +0x200；`fwsize` 上限 = 分区大小 − 512B。U15 同样使用 112B/512B 帧格式，但负载与管理帧分离，布局见上文。所有镜像长度按 CRC 外设要求 **4 字节对齐**；内部 Flash 最终双字写由尾块 0xFF 补齐到 8 字节。所有 CRC32 使用片上 CRC 约定（poly 0x04C11DB7、init 0xFFFFFFFF、无反射），打包工具须同约定。
 
 ### 升级校验链（接收 → 装包 → 确认）
 
-| 步骤 | 函数 | 作用 | 出处 |
-|------|------|------|------|
-| 1. 接收门 | `VerifyFrameHdrBuf` | 在 SRAM OTA 接收缓冲内先验 128B 帧头（magic / 定向规则 / 几何 / 头 CRC32），通过后才允许向 slot 写第一字节 | `resource_impl/flashresource_impl.c:313-328` |
-| 2. 装包 | `InstallSlotImage` | 擦除 slot 前完成 payload CRC32 校验；先写 payload、最后写 512B 帧头区作为提交标记（中途掉电只留旧镜像或无帧头空槽） | `resource_impl/flashresource_impl.c:330-378` |
-| 3. 回读深校验 | `VerifySlotImage` | 装包后、确认前对 Slot B 已写入的 payload 分块（1KB 静态缓冲）做 Flash 回读 CRC32，与 `FrameHead_t.crc32data` 比对，先经 `BoardFlashVerifyHdr` 复核帧头 | `resource_impl/flashresource_impl.c:380-412`、`:296-311` |
-| 4. 确认 | APP 置 `OtaInfo_t.state = CONFIRMED` | 触发 BL 提升 | `resource_impl/flashresource_impl.h:116-118` |
-| 5. 提升 | Bootloader 将 B 逐字节拷贝到 A | 稳态不变量 Slot A == Slot B | `resource/flashresource.h:77-81` |
+| 步骤 | 函数 | 作用 |
+|------|------|------|
+| 1. 接收门 | `VerifyFrameHdrBuf` | 在首次擦写前校验 RAM 中的 112B 帧头：company、逻辑 type+storeaddr 与物理目标匹配、fwsize/容量、头 CRC32 |
+| 2. 接收与装包 | CDB 0103h / 0107h，或 APP 辅助接口 `InstallSlotImage` | 先写 payload、最后写 512B 帧头区；CDB 按 Start 锁存的物理目标及 `FlashFramePayloadOffset/FlashFrameHeaderOffset` 写内部 Flash 或 U15 |
+| 3. 回读深校验 | `VerifyFramedImage` | 从物理目标回读帧头与 payload，分块计算 CRC32 并与 `FrameHead_t.crc32data` 比对；`VerifySlotImage` 是内部 APP slot 的包装 |
+| 4. 确认/复位 | CDB 0109h Run | APP_B 调 `OtaConfirm` 写 64B 记录后延时复位；PARA_A/PARA_B/DSP_FW 只延时复位 |
+| 5. APP 提升 | Bootloader `BlBootDecide` | 仅对已确认的 APP_B 原样提升 B→A，稳态不变量 Slot A == Slot B |
 
-### OTA 元数据 J-A 页内布局（OtaInfo_t，128B）
+### OTA 元数据 J-A 页内布局（OtaInfo_t，64B）
 
-P5 页基址（`MEM_OTA_META_A_BASE`）处保存一条 128B 升级记录；每次重写前整页擦除，页内其余保持 0xFF（`resource_impl/flashresource_impl.h:88-122`）：
+P5 页基址（`MEM_OTA_META_A_BASE`）处保存一条 64B 升级确认记录；每次重写前整页擦除，页内其余保持 0xFF（`resource_impl/flashresource_impl.h:94-151`）：
 
 | 偏移 | 字段 | 说明 |
 |------|------|------|
 | +0x00 | magic[16] | `OTA_INFO_MAGIC` "TBCOTAUP" + 0xFF 填充 |
-| +0x10 | ver / state / src / rsvd[2] | ver = `OTA_INFO_VER` 0x00010000；state 见下；src = 升级来源 |
-| +0x20 | swver[16] | 目标固件版本（升级包 swver 拷贝） |
-| +0x30 | fwsize / crc32data / crc32hdr / rsvd | 与 `FrameHead_t` 同语义 |
-| +0x40 | total_len / rx_done / blk_size / rsvd | 断点续传进度 |
-| +0x50 | fail_cnt / update_cnt / rsvd[8] | 失败/升级计数 |
-| +0x60 | crc32 | 覆盖 0x00..0x5F（本字段按 0 计），片上 CRC 约定 |
-| +0x64 | rsvd[28] | -> 0xFF |
+| +0x10 | ver | `OTA_INFO_VER` 0x00010000（记录布局版本） |
+| +0x14 | state | `OtaState_t`：仅 IDLE / CONFIRMED |
+| +0x15 | src | `OtaSrc_t`：仅 NONE / HOST |
+| +0x16 | rsvd[2] | -> 0xFF |
+| +0x18 | swver[16] | 目标固件版本（升级包 swver 拷贝） |
+| +0x28 | fwsize | payload 大小 |
+| +0x2C | crc32data | payload CRC32（`FrameHead_t` 拷贝） |
+| +0x30 | crc32hdr | 帧头 CRC32 |
+| +0x34 | update_cnt | OTA 升级计数（持久化，每次确认 +1） |
+| +0x38 | crc32 | 覆盖 0x00..0x37（本字段按 0 计），片上 CRC 约定 |
+| +0x3C | rsvd[4] | -> 0xFF |
 
-state 状态机（`OtaState_t`）：IDLE（擦除/无活动）→ RECEIVING（接收中，`rx_done` 续传）→ RECEIVED（收完待装包）→ INSTALLED（已入 B 且深校验通过，待确认）→ CONFIRMED（已确认，BL 提升 B→A）→ FAILED（接收/校验/装包错误）。
+state 状态机（`OtaState_t`）：**confirm-only**——无断点续传、无重试计数（`update_cnt` 是升级次数计数、非重试计数），flash 里只会出现 IDLE（擦除/无活动）与 CONFIRMED（APP 已确认，BL 提升 B→A）两种态。接收/装包/深校验的中间态全部由 APP 在 RAM 中自持（CDB 引擎 `g_CdbFwState`），不落 flash。
 
 
 ## SRAM 整体布局与分区
@@ -195,7 +229,7 @@ memory_map.h 的地址图要成立，以下条件必须同时满足（resource_i
   }
   ```
 
-  （projects/Objects/400G_SR4_OSFP.sct:12-14）
+  （projects/application/Objects/400G_SR4_OSFP.sct:12-14）
 - 启动文件 `Stack_Size = 0x2000`（8KB）、`Heap_Size = 0`（无堆分配）（driver/mcu/startup/startup_gd32e511_512.s:33,44）。
 - [8] `.data+.bss` 起点固定 0x2000D500，终点由链接器决定；g_SramInfo 表中其计划大小为 `MEM_SRAM_LIMIT - MEM_APP_RAM_BASE - MEM_STACK_SIZE` = 0x10B00（66.75KB），即计划终点 0x2001_E000（resource_impl/sramresource_impl.c:135-139）。
 - [9] MSP 主栈 8KB 向下增长（main + ISR + boot_api），计划栈顶 0x2001_E000，实际位置以链接结果为准（resource_impl/memory_map.h:165-167、resource_impl/sramresource_impl.c:140-144）。
@@ -306,7 +340,7 @@ Flash 侧上下文限制：擦除/编程为 ms 级且 XIP 下 CPU 停等——**
 
 | 写者 | 上下文 | 触碰方式 |
 |---|---|---|
-| I2C EV ISR（prio 2） | 中断 | **只读**：读相位快照 128B（`mci.c` ADDSEND+TR → `g_ReadSrcCb`），TI 流出 |
+| I2C EV ISR（prio 2） | 中断 | **读+写**：读相位快照 128B（ADDSEND+TR → `g_ReadSrcCb`，TI 流出）；host 写帧经 `DtFrameCb` 落 MEMT_SRAM 影子、读帧经 `DtCorClear` 清 COR 位（均 ISR 内、单字节原子） |
 | RAL 引擎 / 应用线程 | 线程 | host 写帧出环应用；模块侧更新监控/Flags/镜像 |
 | Flash 持久化流程 | 线程（XIP 停等波及全部中断） | 擦/写 Flash 主区 |
 
@@ -316,8 +350,8 @@ Flash 侧上下文限制：擦除/编程为 ms 级且 XIP 下 CPU 停等——**
 
 1. **单写者所有权**：每影子字节唯一写者——RW/WO 仅 engine 线程；RO/RWW/Flags 仅应用线程；126/127+镜像仅 Dt 层。写前查 `acctype` 表确认 owner；Flags(RO) 与 Mask(RW) 永不共享字节（自定义区沿用）。
 2. **寄存器粒度原子写**：多字节寄存器/RMW 全程在影子锁内完成；锁内严禁 Flash API 与长逻辑；单字节直写免锁。
-3. **影子锁**：`AdpatShadowLock/Unlock`（线程专用，BASEPRI 屏蔽 I2C EV/ER、保留 SysTick/TIMER2，不可嵌套）。
-4. **COR 协议**：engine 清 Flags 用 `flags &= ~快照值`（只清已被 host 读走的位），与模块置位同锁。
+3. **影子锁**：`AdpatShadowLock/Unlock`（adpat.h/adpat.c，**2026-10-13 已实现**）——线程专用、不可嵌套，`NVIC_DisableIRQ/EnableIRQ(I2C1_EV/ER_IRQn)` 直禁 I2C EV/ER 两中断源（效果等价原 BASEPRI 屏蔽 prio 2/3，保留 SysTick(0)/Timer2(1)；改用 NVIC API 与 i2c_slave.c 一致、免 `__NVIC_PRIO_BITS` 位移依赖）。ISR 内影子访问原子且禁止上锁。
+4. **COR 协议**：engine 清 Flags 用 `DtCorClear`（ISR 内，单字节原子、不上锁）按 `flags &= ~快照值` 只清已被 host 读走的位；模块侧置位 RMW（`MsmShadowLatchBit`/`DpsmFlagStateChanged`/`MonFlagUpdate`）在影子锁内——线程侧置位有锁、ISR 侧清零原子，二者不再交错丢更新。
 5. **页映射原子更新**：`DtTabCtrl` 与槽位 [0] 镜像锁内一次完成；快照侧按对齐 16 位单次读。
 6. **批量写**：初始化在 host 总线使能前完成；运行期整页刷新按 `OsfpRegAttr_t` 表逐寄存器锁内写；整块拷贝避开 host 活动窗口。
 7. **Flash 调度**：dirty-page 延迟队列攒批，总线静默期一次擦写；NV 写触发的持久化落在 CMIS `tWRITENV`(80ms) 合法 hold-off 窗口内；调试期入口断言非中断上下文（查 IPSR）。
@@ -353,49 +387,51 @@ typedef BYTE AdpatSizeCheck_t[
 
 本节从打包脚本、Keil 链接脚本、启动文件三个工具链产物出发，说明 APP 镜像的落盘格式、链接基址与 SRAM 运行期布局，并与 `resource_impl/memory_map.h` 的声明值逐项核对。
 
-### 1. APP 镜像格式（512B 帧头区 + 负载）
+### 1. Framed 镜像格式（512B 帧头区 + 负载）
 
-打包脚本 `tools/pack_framed_bin.py` 将 Keil 生成的原始 bin（`bin/400G_SR4_OSFP.bin`）封装为"512B 帧头区 + 负载"的分区镜像，镜像布局为：
+打包脚本 `tools/pack_framed_bin.py` 将原始 bin 封装为“512B 帧头区 + 负载”的传输/分区镜像。APP 的输入为 Keil 生成的 `bin/400G_SR4_OSFP.bin`；PARAM/MISC/EXTFLASH 使用各自 raw 数据。布局为：
 
 ```
-+0x000  FrameHead_t  128B   crc32data | flash_id | rsvd[3] | storeaddr | fwsize，
-                              其后为 0xFF 填充的 16B ASCII 标识槽 company/hdver/swver/modulename，
-                              rsvd[16]x2 + rsvd[12]，+0x7C 处为 crc32hdr（帧头 CRC32）
-+0x080  rsvd         384B   固定 0xFF
-+0x200  payload      fwsize B，8 字节对齐，0xFF 填充（源文件 tools/pack_framed_bin.py:59-61, 279-283）
++0x000  FrameHead_t  112B   crc32data | type | rsvd0[3] | storeaddr | fwsize |
+                              company[16] / hdver[16] / swver[16] / modulename[16] |
+                              rsvd1[16] / rsvd2[12] / crc32hdr
++0x070  rsvd         400B   固定 0xFF
++0x200  payload      fwsize B，4 字节对齐；文件本身不在尾部额外垫 0xFF
 ```
 
 关键参数：
 
-| 参数 | 值 | 来源 |
-|---|---|---|
-| 帧头区总大小 FRAME_HDR_AREA_SIZE | 0x200（512B） | pack_framed_bin.py:59 |
-| FrameHead_t 结构体大小 FRAME_HDR_SIZE | 128B | pack_framed_bin.py:61 |
-| 负载起始偏移 FRAME_PAYLOAD_OFF | 0x200 | pack_framed_bin.py:60 |
-| APP 负载上限 APP_BIN_LIMIT | 0x2DE00（187904B ≈ 183.5KB） | pack_framed_bin.py:70 |
-| 帧头内 crc32hdr 偏移 | +0x7C（最后一个 DWORD） | pack_framed_bin.py:63 |
+| 参数 | 值 |
+|---|---|
+| 帧头区总大小 `FRAME_HDR_AREA_SIZE` | 0x200（512B） |
+| `FrameHead_t` 结构体大小 `FRAME_HDR_SIZE` | 112B（0x70） |
+| 传输包负载起始偏移 `FRAME_PAYLOAD_OFF` | 0x200 |
+| APP 负载上限 `APP_BIN_LIMIT` | 0x2DE00（187904B ≈ 183.5KB） |
+| DSP_FW 负载上限 `DSP_FW_PAYLOAD_CAP` | 0x7F000（520192B = 508KB） |
+| 帧头内 `crc32hdr` 偏移 | +0x6C（最后一个 DWORD） |
 
-因此 APP 镜像在 Flash 中的实际占用为"分区基址 + 0x200 帧头区 + 负载"，负载上限 0x2DE00 恰为槽容量 0x2E000 减去 0x200，与槽几何严丝合缝。
+因此内部 APP 镜像在 Flash 中的实际占用为“分区基址 + 0x200 帧头区 + 负载”，负载上限恰为槽容量 0x2E000 减去 0x200。U15 是例外：传输包仍在 +0x200 携带 payload，但固件落盘时把 raw payload 写到 NOR offset 0、把帧头区写到 0x7F000。
 
-CRC 约定与 GD32 片内 CRC 外设一致（对应固件侧 `BoardFlashCrc32`）：多项式 0x04C11DB7、初值 0xFFFFFFFF、无输入/输出反射、无最终异或，数据按小端 32 位字、每字 MSB 在前喂入，长度必须为 4 的倍数；crc32hdr 计算时该字段自身按 0 代入（tools/pack_framed_bin.py:24-27, 105-120, 274-277）。
+CRC 约定与 GD32 片内 CRC 外设一致（对应固件侧 `BoardFlashCrc32`）：多项式 0x04C11DB7、初值 0xFFFFFFFF、无输入/输出反射、无最终异或，数据按小端 32 位字、每字 MSB 在前喂入，长度必须为 4 的倍数；`crc32hdr` 计算时该字段自身按 0 代入。
 
-### 2. APP 链接基址与 Slot A/B 的对应关系
+### 2. 逻辑定向、链接基址与物理槽位
 
-打包与校验均强制以下几何（tools/pack_framed_bin.py:76-83, 247-270）：
+打包与校验按 `flash_type + store_addr` 强制以下几何：
 
-| 分区 | flash_id | 基址 | 容量 |
+| 逻辑类型 | `store_addr` | 逻辑区域 / CDB 物理目标 | 负载上限 |
 |---|---|---|---|
-| APP Slot A（固定运行区） | 5 | 0x08010000 | 0x2E000（184KB） |
-| APP Slot B（升级镜像区） | 6 | 0x0803E000 | 0x2E000（184KB） |
-| PARA A / B | 7 / 8 | 0x0806C000 / 0x08074000 | 0x8000（32KB）各 |
-| MISC A / B | 9 / 10 | 0x0807C000 / 0x0807E000 | 0x2000（8KB）各 |
+| `FLASH_TYPE_APP` | 0x08010000 | APP_A 逻辑镜像 / 物理 APP_B | 0x2DE00 |
+| `FLASH_TYPE_PARAM` | 0x0806C000 | PARA_A / 物理 PARA_A | 0x7E00 |
+| `FLASH_TYPE_PARAM` | 0x08074000 | PARA_B / 物理 PARA_B | 0x7E00 |
+| `FLASH_TYPE_MISC` | 0x0807C000 / 0x0807E000 | MISC_A / MISC_B（仅通用打包，非当前 CDB 路由） | 0x1E00 |
+| `FLASH_TYPE_EXTFLASH` | 0x00000000 | DSP_FW / 物理 U15（仅 APP） | 0x7F000 |
 
-- **负载必须链接在 store_addr + 0x200**，即 APP 的链接基址为 0x08010200（link_base = store_addr + FRAME_PAYLOAD_OFF，pack_framed_bin.py:260-261）。打包时校验负载前 8 字节：初始 MSP 必须落在 SRAM `[0x20000000, 0x20020000)` 内，复位向量（清 Thumb 位后）必须落在 `[link_base, link_base + 镜像长度)` 内，否则报错要求重新链接（pack_framed_bin.py:262-270）。
-- **固定 A 运行 / 镜像 B 升级方案**：APP 升级包永远以 A 命名（flash_id = FLASH_ID_APP_A，store_addr = 0x08010000），一律先经 Slot B 写入，B 槽只保存 A 镜像、永远不接受 B 名包；打包和校验路径均直接拒绝 FLASH_ID_APP_B（pack_framed_bin.py:40-43, 233-235, 334-336）。
+- **APP 负载必须链接在 store_addr + 0x200**，即 0x08010200。打包时仅对 APP 校验负载前 8 字节：初始 MSP 必须落在 SRAM `[0x20000000, 0x20020000)` 内，复位向量（清 Thumb 位后）必须落在 `[link_base, link_base + fwsize)` 内。PARAM/MISC/DSP 是数据镜像，不做 MSP/复位向量检查。
+- **固定 A 运行 / 镜像 B 接收**：APP 包永远声明 `FLASH_TYPE_APP + 0x08010000`，CDB 一律写物理 Slot B；直接以 APP_B 地址或其他 type/storeaddr 组合打包会被拒绝。BL 提升时无需改写帧头。
 
 ### 3. 链接脚本（.sct）内存区参数
 
-`outputs/` 下的 .sct 已从工作区删除，当前有效的散列加载文件为 `projects/Objects/400G_SR4_OSFP.sct:5-14`：
+`outputs/` 下的 .sct 已从工作区删除，当前有效的散列加载文件为 `projects/application/Objects/400G_SR4_OSFP.sct:5-14`：
 
 ```
 LR_IROM1 0x08010200 0x0002DE00  {          ; 加载区 = 执行区
@@ -438,7 +474,7 @@ Heap_Size   EQU  0x00000000    ; 无堆
 | 核对项 | memory_map.h 声明 | 工具链实际值 | 结论 |
 |---|---|---|---|
 | SRAM 基址/容量 | MEM_SRAM_BASE=0x20000000，MEM_SRAM_SIZE=0x20000（memory_map.h:126-127） | 打包脚本 SRAM_BASE=0x20000000 / SRAM_SIZE=0x20000（pack_framed_bin.py:56-57） | 一致 |
-| APP Slot A 基址/容量 | MEM_APP_A_BASE=0x08010000，MEM_APP_SLOT_SIZE=0x2E000（memory_map.h:65-66） | 脚本 REGIONS 同值（pack_framed_bin.py:77）；.sct ER_IROM1 基址 0x08010200 = 槽基址 + 0x200 | 一致 |
+| APP Slot A 基址/容量 | MEM_APP_A_BASE=0x08010000，MEM_APP_SLOT_SIZE=0x2E000 | 脚本 `ROUTES[FLASH_TYPE_APP]` 同值；.sct ER_IROM1 基址 0x08010200 = 槽基址 + 0x200 | 一致 |
 | APP 链接基址 | 帧头约定 store_addr + 0x200 | .sct LR_IROM1/ER_IROM1 = 0x08010200 | 一致 |
 | RW 区起点 | MEM_APP_RAM_BASE=0x2000D500（memory_map.h:163），且要求 .sct RW_IRAM1 必须从 0x2000D500 起（memory_map.h:122-123） | .sct RW_IRAM1 = 0x2000D500 | 一致 |
 | RW 区容量上限 | ≤ 0x12B00（memory_map.h:122-123） | .sct RW_IRAM1 = 0x12B00，恰好等于上限（含 .data/.bss + 8KB 栈） | 一致（取满） |
@@ -454,10 +490,76 @@ APP 链接基址为 **0x08010200**（Slot A 基址 `0x08010000` + 512B 帧头区
 
 - `driver/mcu/system/system_gd32e511_512.c:41` 定义 `VECT_TAB_OFFSET = 0x00010200`（注释：APP_A payload base - flash base）
 - 依启动路径调用 `nvic_vector_table_set(NVIC_VECTTAB_FLASH, VECT_TAB_OFFSET)`（同文件 :211；RAM 调试路径 :209 用 `NVIC_VECTTAB_RAM`）
-- 正常升级启动由 **Bootloader 在跳转前**把 `SCB->VTOR` 置为被启动槽的 payload 基址（APP_B 构建有自己的链接基址）；源码文件头注释明确：此 FLASH 值只覆盖单机/调试路径（`system_gd32e511_512.c:35-40`）
+- 正常升级启动由 **Bootloader 在跳转前**把 `SCB->VTOR` 置为 0x08010200（Slot A payload 基址，见下文 BL 专节）；APP 自身 `VECT_TAB_OFFSET=0x00010200` 的 FLASH 路径只覆盖单机/调试场景，跳转前 BL 的 VTOR 写入与 APP SystemInit 的重置同值，双保险（`system_gd32e511_512.c:35-41`）
+- **BL_BUILD 守卫**（2026-10-14）：`VECT_TAB_OFFSET` 宏定义包 `#ifndef`，BL 工程经 Define 传 `VECT_TAB_OFFSET=0`（BL 向量表在 0x08000000，无需偏移），APP 工程不定义时保持原值——守卫对 APP 编译零影响（`system_gd32e511_512.c:40-44`）
+
+## Bootloader（救援模式，2026-10-14 落地）
+
+Bootloader 从纸面分区（P0-P3，32KB）落地为独立 Keil 工程 `projects/bootloader/400G_SR4_OSFP_BL.uvprojx`（由 `tools/make_bl_uvprojx.py` 从 APP 工程克隆生成），镜像产物 `bin/400G_SR4_OSFP_BL.bin`（扁平 bin）。BL 职责只有两件：**启动决策（提升 B→A + 跳转 APP）**与**救援模式（I2C1 从机 0xA0 + CDB 9Fh 固件下载）**。救援态 CDB 支持 APP_B（A 逻辑包）、PARA_A 与 PARA_B，拒绝 DSP_FW；不支持 BL 自身升级。
+
+### BL 工程链接布局
+
+与 APP 同内存图、不同链接基址：
+
+| 区 | 基址 | 容量 | 说明 |
+|---|---|---|---|
+| IROM1（OCR_RVCT4） | 0x08000000 | 0x8000（32KB） | BL 全量镜像，向量表在 0x08000000（VECT_TAB_OFFSET=0） |
+| IRAM1（OCR_RVCT9） | 0x2000D500 | 0x12B00 | 与 APP 相同——BL 与 APP 不同时运行，共享无冲突 |
+| 影子区 `.ARM.__at_0x20005700` | 0x20005700 | PAGE_TAB_NUM×128 = 5×128 = 640B | BL_BUILD 裁剪后仅 5 页槽位 |
+
+构建产物（`projects/bootloader/build_type_route.log`）：Code=19096 RO-data=1520 RW-data=648 ZI-data=11136，0 Error / 0 Warning，总计远小于 32KB。BL 与 APP 的 axf 均含双加载域（ER_IROM1 + 影子区 `.ARM.__at_0x20005700` ZI），`fromelf --bin` 会按域拆成目录——两工程 AfterMake 统一用 cmd 链（fromelf 出目录 → `move` 提取 ER_IROM1 → `rmdir`，`&&` 串联、尾部 `|| echo AFTERMAKE-FAILED` 失败标记）得到扁平 bin（2026-10-15 修复：此前 APP 因同名 bin 文件已存在 Q0147E 静默失败、产物停留在 2026-09-28 旧镜像）。★APP 链尾再 `&&` 接打包器（`C:\Users\86177\.tools\py313\python.exe <repo>\tools\pack_framed_bin.py`，绝对 python + 绝对脚本路径、cwd 无关），每次链接自动刷新 `bin/400G_SR4_OSFP_framed.bin` + `tools/400G_SR4_OSFP_FRAMEHEAD.json`；BL 不打包（扁平 bin 无帧头）。★失败语义（2026-10-15 故障注入实测）：链失败即停（`&&`），`bin/app_tmp` 残留 + 构建日志 AFTERMAKE-FAILED 标记 + bin mtime 不刷新三重信号；★nStopA1X 退出码硬失败不可用——UV4 5.39 实测非零值无条件报 1 Error + Target not created 并删 axf（N=1/exit0、N=1/exit1、N=2/exit1 三探针全报错），故 nStopA1X 保持 0。★取证结论：ER_IROM1 文件 = **完整 LR_IROM1 加载域**（exec 区 + RW 压缩 .data 镜像），大小与 map 的 `LR_IROM1 COMPRESSED[n]` 注解精确相等（APP：53744 = 0xD1F0 = 0xCF78 + 0x278），bin 不缺 .data 初值；第二域影子文件（UNINIT）被 rmdir 丢弃，不属 flash 镜像。
+
+### 启动流程（main.c + bl_promote.c）
+
+```
+复位（向量表 0x08000000，SystemInit 120MHz）
+  → BlBootDecide()：
+       读 METADATA_A OtaInfo_t（magic "TBCOTAUP" + ver + FlashCrc32 整 0x00..0x37 校验）
+       ├─ state==CONFIRMED：VerifySlotImage(B) → 提升 B→A → 校验 A → 重写记录为 IDLE
+       │    （保留 update_cnt）→ VerifySlotImage(A) 通过 → BL_BOOT_JUMP_APP
+       └─ 否则（IDLE/记录损坏/槽 B 无帧头）：直接校验槽 A
+  ├─ 槽 A 合法 → BlJumpToApp()：__disable_irq → SysTick 停 → SCB->VTOR=0x08010200
+  │    → 切栈+清 PRIMASK+跳复位向量经【全寄存器内联汇编】一次完成（切栈后
+  │    C 栈失效，跳转目标必须已装载在寄存器——曾实测编译器在切栈后从
+  │    [sp,#0] 重载局部变量导致跳 0 地址 BL 自我重启；PRIMASK 亦必须清——
+  │    函数指针跳转非硬件复位不会自动清零，APP 启动序列无重开点）（不返回）
+  └─ 槽 A 无效 → 救援环：
+       McuClockInit(80MHz，Timer2 分频硬编码 80M) → SystemCoreClockUpdate
+       → BlShadowClear（影子 640B 清零，必须在 I2C 使能前）
+       → BlIdentityLoad（00h:0-2 标识字节：Flash 主参数区 +512 → 影子，host 枚举
+          读到真实身份而非恒 0；须在 I2C 使能前）
+       → Timer2SchedulerInit(80000000U,1000U) → DtTabCtrlInit → CdbInit
+       → I2cSlaveInit(0xA0)
+       for(;;) { Timer2SchedulerRun(); CdbExeBackground(); }
+```
+
+掉电安全设计（崩溃安全提升，全部窗口收敛到「可启动 A」或「救援环」或「幂等重试」）：
+
+1. **负载先行、帧头最后**：提升先拷 payload（按 fwsize 分 512B 片、8 字节对齐）、最后拷 512B 帧头区——帧头是提交标记，中途掉电槽 A 无帧头 → 校验必拒。
+2. **记录后清、幂等重试**：CONFIRMED 记录在提升成功后、跳转前才重写为 IDLE；任何时刻掉电，下次上电记录仍 CONFIRMED → 重跑提升（B 完好则幂等无害）。清除时整页擦除 + 64B 重写之间掉电 → 记录损坏 → 走「校验槽 A」路径，A 合法则照常启动。
+3. **记录↔镜像绑定**：提升前比对记录的 `fwsize/crc32data/crc32hdr` 与 B 现帧头，任一项不符（host 换入新镜像未 Run / 镜像损坏）视为陈旧记录 → 清回 IDLE（保留 update_cnt）、跳过提升、回落槽 A 校验——未经 Run 确认的暂存镜像不会被残留记录静默激活（CMIS Run 激活门保持）。
+4. **无回滚状态机**：B 损坏但 A 完好 → 跳过提升、直接启动旧 A；A 损坏但 B 完好且无 CONFIRMED 记录 → 不擅自提升，进救援环等 host 重灌。
+5. **跳转不复位**：BL 不调用 NVIC_SystemReset 跳转，直接重跑 APP Reset_Handler（SystemInit/__main 全套），RAM 复用无残留问题；`__disable_irq` 只保护 VTOR/MSP 切换窗口，切栈+清 PRIMASK+跳转经全寄存器内联汇编一次完成（对抗性审查曾抓出两代 critical：PRIMASK 不清零致 APP 全中断屏蔽；切栈后经 [sp,#0] 重载跳转目标致跳 0 地址自我重启）。
+6. **BL 不启动 FWDGT**（启动后不可关会带进 APP 窗口期）；擦除期 `EraseFlashWithFeed` 逐页调 `WatchdogKick` 在未启动看门狗上是安全 no-op（`driver/mcu/adpat/src/watchdog.c`）。
+
+### BL 裁剪页表（bl_ral_tab.c，BL_BUILD 枚举）
+
+`protocol/ral/inc/ral.h` 的 `TabIndex_t` 在 `BL_BUILD` 下裁剪为 5 槽：`PAGE_ID_LOW=0`、`PAGE_ID_9FH_0..3=1..4`、`PAGE_TAB_NUM=5`（APP 分支 214 槽原样保留）。`projects/bootloader/src/bl_ral_tab.c`：
+
+- `g_OsfpInfPageLow` 9 行：0x00/0x01/0x02 MEMT_FLASH、0x03、0x08 COR、0x1A ModuleControl、0x25、0x27（BL 中改 MEMT_SRAM）、0x7E BankPageSelect——其余逐字复制 `protocol/ral/src/ral.c`；
+- `g_OsfpInfPage9FH` 7 行逐字复制（CDB 消息页）；
+- `g_OsfpTabForm` 5 行：[0]=Low 非 banked，[1..4]=9Fh tab 升序 banked=1；编译期负长数组断言行数 == PAGE_TAB_NUM。
+
+引擎四文件（`data_transfer.c`/`adpat.c`/`i2c_slave.c`/`cdb.c`）+ flash/sram 资源层**零修改编译**。`projects/bootloader/src/bl_ral_operate.c` 仅含 3 个 oprfunc（ModuleControl/BankPageSelect/9fCmdId，函数体逐字来自 `ral_operate.c`）与 `g_Pwd*` 三全局（cdb.c Query 读 `g_PwdUnlocked`——BL 恒 locked，无密码 Entry/Change 路径）。CDB 下载流程（Start→Write→Complete→Run→复位）在裁剪表下运行；仅 APP_B 在复位后由 BL 执行 B→A 提升，PARA_A/PARA_B 只复位，DSP_FW 在 BL 入口即拒绝。Run 的延时复位任务挂在 Timer2（BL 救援环 1ms tick 驱动）。
+
+### 工程约定
+
+- 组裁剪：common/main/bootloader(3)/protocols(4 引擎)/resource(2)/resourceimpl(3)/startup/mcu(24)/system/adapt(mcu_clock+timer2_scheduler+watchdog)；删除 odsp/projectfiles/drv/tia/pmic/mal/msl 及 mcu_i2c/mcu_spi。
+- Define：`USE_STDPERIPH_DRIVER,GD32E511_512,VECT_TAB_OFFSET=0,BL_BUILD`；工程迁入 `projects/` 后，仓库根相对路径使用 `..\..\` 前缀，BL 自引用保留 `..\bootloader\inc`。
+- 再生成：改 `tools/make_bl_uvprojx.py` 后重跑即可（幂等）；BL 源文件在 `projects/bootloader/src`、`projects/bootloader/inc`。
 
 ## 维护说明
 
-- **权威来源**：本文档全部事实取自源码，主要来源：`resource_impl/memory_map.h`（布局单一事实源）、`resource/flashresource.h` + `resource_impl/flashresource_impl.*`（Flash 分区与升级）、`resource/sramresource.h` + `resource_impl/sramresource_impl.*`（SRAM 十区）、`protocol/adpat/*`（management map 影子）、`projects/Objects/400G_SR4_OSFP.sct`（分散加载）、`driver/mcu/system/system_gd32e511_512.c`（VTOR）。
-- **改动联动**：修改 `memory_map.h` 布局后，必须同步更新本文档与 [2] 区使用方（BL）；新增 banked 页时同步"Protocol MSA space"节的槽位表。
+- **权威来源**：本文档全部事实取自源码，主要来源：`resource_impl/memory_map.h`（布局单一事实源）、`resource/flashresource.h` + `resource_impl/flashresource_impl.*`（Flash 资源与 framed 镜像）、`protocol/cdb/*`（逻辑路由与下载状态机）、`driver/extflash/*`（U15 读写擦）、`resource/sramresource.h` + `resource_impl/sramresource_impl.*`（SRAM 十区）、`protocol/adpat/*`（management map 影子）、`projects/application/Objects/400G_SR4_OSFP.sct`（分散加载）、`driver/mcu/system/system_gd32e511_512.c`（VTOR）、`projects/bootloader/`（BL 工程与救援模式，见 BL 专节）、`tools/pack_framed_bin.py` + `tools/make_full_hex.py`（打包与全片镜像）。
+- **改动联动**：修改 `memory_map.h` 布局后，必须同步更新本文档与 [2] 区使用方（BL）；新增 banked 页时同步"Protocol MSA space"节的槽位表；改动 `ral.h` 页表枚举时同步 `projects/bootloader/src/bl_ral_tab.c` 的 BL 裁剪表与本文档 BL 专节；BL 工程重生成只改 `tools/make_bl_uvprojx.py`。
 - **布局一致性**：`memory_map.h` 末尾的 `#if` 检查链会在编译期强制固定区 [0]-[7] 首尾相接，本文档地址图与之一致。

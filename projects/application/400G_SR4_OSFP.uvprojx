@@ -82,7 +82,7 @@
           <AfterMake>
             <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name>cmd /c C:\Keil_v5\ARM\ARMCC\bin\fromelf.exe --bin --output ..\bin\400G_SR4_OSFP.bin .\Objects\400G_SR4_OSFP.axf</UserProg1Name>
+            <UserProg1Name>cmd /c C:\Keil_v5\ARM\ARMCC\bin\fromelf.exe --bin --output ..\..\bin\app_tmp .\Objects\400G_SR4_OSFP.axf &amp;&amp; move /Y ..\..\bin\app_tmp\ER_IROM1 ..\..\bin\400G_SR4_OSFP.bin &amp;&amp; rmdir /S /Q ..\..\bin\app_tmp &amp;&amp; C:\Users\86177\.tools\py313\python.exe C:\Users\86177\Desktop\project\400G_SR4_OSFP\tools\pack_framed_bin.py || echo *** AFTERMAKE-FAILED: fromelf or pack failed; check bin\app_tmp / bin\400G_SR4_OSFP.bin / bin\400G_SR4_OSFP_framed.bin ***</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32E511_512</Define>
               <Undefine></Undefine>
-              <IncludePath>..\driver\projectfiles\inc;..\common;..\driver\mcu\core;..\driver\mcu\peripheral\include;..\driver\mcu\system;..\resource;..\resource_impl;..\driver\odsp\projectfiles\inc;..\driver\odsp\projectfiles;..\driver\mcu\adpat\inc;..\driver\drv\inc;..\driver\tia\inc;..\protocol\adpat\inc;..\protocol\mci\inc;..\protocol\mci\inc;..\protocol\ral\inc</IncludePath>
+              <IncludePath>..\..\driver\projectfiles\inc;..\..\common;..\..\driver\mcu\core;..\..\driver\mcu\peripheral\include;..\..\driver\mcu\system;..\..\resource;..\..\resource_impl;..\..\driver\odsp\projectfiles\inc;..\..\driver\odsp\projectfiles;..\..\driver\odsp\adapt;..\..\driver\mcu\adpat\inc;..\..\driver\drv\inc;..\..\driver\tia\inc;..\..\driver\pmic\inc;..\..\driver\extflash\inc;..\..\protocol\mci\inc;..\..\protocol\ral\inc;..\..\protocol\adpat\inc;..\..\protocol\mal\inc;..\..\protocol\msl\inc;..\..\protocol\cdb\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -387,7 +387,7 @@
             <File>
               <FileName>basedef.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\common\basedef.h</FilePath>
+              <FilePath>..\..\common\basedef.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -397,7 +397,7 @@
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\main\main.c</FilePath>
+              <FilePath>..\..\main\main.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -407,22 +407,72 @@
             <File>
               <FileName>ral.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\ral\src\ral.c</FilePath>
-            </File>
-            <File>
-              <FileName>mci.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\protocol\mci\src\mci.c</FilePath>
+              <FilePath>..\..\protocol\ral\src\ral.c</FilePath>
             </File>
             <File>
               <FileName>data_transfer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\mci\src\data_transfer.c</FilePath>
+              <FilePath>..\..\protocol\mci\src\data_transfer.c</FilePath>
             </File>
             <File>
               <FileName>adpat.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\adpat\src\adpat.c</FilePath>
+              <FilePath>..\..\protocol\adpat\src\adpat.c</FilePath>
+            </File>
+            <File>
+              <FileName>dpsm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\dpsm.c</FilePath>
+            </File>
+            <File>
+              <FileName>monitor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\monitor.c</FilePath>
+            </File>
+            <File>
+              <FileName>monitor_impl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\monitor_impl.c</FilePath>
+            </File>
+            <File>
+              <FileName>msm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\msm.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c_slave.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mci\src\i2c_slave.c</FilePath>
+            </File>
+            <File>
+              <FileName>cdb.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\cdb\src\cdb.c</FilePath>
+            </File>
+            <File>
+              <FileName>msl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\msl\src\msl.c</FilePath>
+            </File>
+            <File>
+              <FileName>ral_operate.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\ral\src\ral_operate.c</FilePath>
+            </File>
+            <File>
+              <FileName>mgmt_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\mgmt_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>msm_pwr_seq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\msm_pwr_seq.c</FilePath>
+            </File>
+            <File>
+              <FileName>vdm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\protocol\mal\src\vdm.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -432,42 +482,42 @@
             <File>
               <FileName>adcresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\adcresource.c</FilePath>
+              <FilePath>..\..\resource\adcresource.c</FilePath>
             </File>
             <File>
               <FileName>chipresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\chipresource.c</FilePath>
+              <FilePath>..\..\resource\chipresource.c</FilePath>
             </File>
             <File>
               <FileName>dacresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\dacresource.c</FilePath>
+              <FilePath>..\..\resource\dacresource.c</FilePath>
             </File>
             <File>
               <FileName>gpioresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\gpioresource.c</FilePath>
+              <FilePath>..\..\resource\gpioresource.c</FilePath>
             </File>
             <File>
               <FileName>busresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\busresource.c</FilePath>
+              <FilePath>..\..\resource\busresource.c</FilePath>
             </File>
             <File>
               <FileName>boardresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\boardresource.c</FilePath>
+              <FilePath>..\..\resource\boardresource.c</FilePath>
             </File>
             <File>
               <FileName>flashresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\flashresource.c</FilePath>
+              <FilePath>..\..\resource\flashresource.c</FilePath>
             </File>
             <File>
               <FileName>sramresource.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource\sramresource.c</FilePath>
+              <FilePath>..\..\resource\sramresource.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -477,47 +527,47 @@
             <File>
               <FileName>adcresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\adcresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\adcresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>chipresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\chipresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\chipresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>dacresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\dacresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\dacresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>gpioresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\gpioresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\gpioresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>busresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\busresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\busresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>boardresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\boardresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\boardresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>flashresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\flashresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\flashresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>sramresource_impl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resource_impl\sramresource_impl.c</FilePath>
+              <FilePath>..\..\resource_impl\sramresource_impl.c</FilePath>
             </File>
             <File>
               <FileName>memory_map.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\resource_impl\memory_map.h</FilePath>
+              <FilePath>..\..\resource_impl\memory_map.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -527,7 +577,7 @@
             <File>
               <FileName>startup_gd32e511_512.s</FileName>
               <FileType>2</FileType>
-              <FilePath>..\driver\mcu\startup\startup_gd32e511_512.s</FilePath>
+              <FilePath>..\..\driver\mcu\startup\startup_gd32e511_512.s</FilePath>
             </File>
           </Files>
         </Group>
@@ -537,122 +587,122 @@
             <File>
               <FileName>gd32e511_512_adc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_adc.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_adc.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_cla.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_cla.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_cla.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_cmp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_cmp.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_cmp.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_crc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_crc.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_crc.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_dac.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_dac.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_dac.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_dbg.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_dbg.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_dbg.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_dma.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_dma.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_dma.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_exti.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_exti.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_exti.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_fmc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_fmc.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_fmc.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_fwdgt.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_fwdgt.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_fwdgt.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_gpio.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_gpio.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_gpio.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_i2c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_i2c.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_i2c.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_i3c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_i3c.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_i3c.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_mdio.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_mdio.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_mdio.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_misc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_misc.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_misc.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_opa.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_opa.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_opa.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_pmu.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_pmu.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_pmu.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_rcu.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_rcu.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_rcu.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_rtc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_rtc.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_rtc.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_spi.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_spi.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_syscfg.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_syscfg.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_syscfg.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_timer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_timer.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_timer.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_usart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_usart.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_usart.c</FilePath>
             </File>
             <File>
               <FileName>gd32e511_512_wwdgt.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\peripheral\src\gd32e511_512_wwdgt.c</FilePath>
+              <FilePath>..\..\driver\mcu\peripheral\src\gd32e511_512_wwdgt.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -662,52 +712,52 @@
             <File>
               <FileName>capi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\capi.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\capi.c</FilePath>
             </File>
             <File>
               <FileName>capi_diag.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\capi_diag.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\capi_diag.c</FilePath>
             </File>
             <File>
               <FileName>capi_test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\capi_test.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\capi_test.c</FilePath>
             </File>
             <File>
               <FileName>host_chip_wrapper.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\host_chip_wrapper.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\host_chip_wrapper.c</FilePath>
             </File>
             <File>
               <FileName>host_diag.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\host_diag.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\host_diag.c</FilePath>
             </File>
             <File>
               <FileName>host_download_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\host_download_util.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\host_download_util.c</FilePath>
             </File>
             <File>
               <FileName>host_test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\host_test.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\host_test.c</FilePath>
             </File>
             <File>
               <FileName>host_to_chip_ipc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\odsp\projectfiles\src\host_to_chip_ipc.c</FilePath>
+              <FilePath>..\..\driver\odsp\projectfiles\src\host_to_chip_ipc.c</FilePath>
             </File>
             <File>
               <FileName>reg_access_arm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\reg_access_arm.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\reg_access_arm.c</FilePath>
             </File>
             <File>
               <FileName>hr_time_arm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\hr_time_arm.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\hr_time_arm.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -717,182 +767,182 @@
             <File>
               <FileName>ml_cw_rtmr_handler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\ml_cw_rtmr_handler.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\ml_cw_rtmr_handler.c</FilePath>
             </File>
             <File>
               <FileName>ml_cw_rtmr_modes.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\ml_cw_rtmr_modes.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\ml_cw_rtmr_modes.c</FilePath>
             </File>
             <File>
               <FileName>ml_cw_xbar.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\ml_cw_xbar.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\ml_cw_xbar.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_clkrst_control.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_clkrst_control.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_clkrst_control.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_clockrst_mux.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_clockrst_mux.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_clockrst_mux.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_datapath_cfg.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_datapath_cfg.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_datapath_cfg.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_kp4prbs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_kp4prbs.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_kp4prbs.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_status_check.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_status_check.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_status_check.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_top.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_top.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_top.c</FilePath>
             </File>
             <File>
               <FileName>chal_gpio.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_gpio.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_gpio.c</FilePath>
             </File>
             <File>
               <FileName>chal_lw_diag_info_p.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_lw_diag_info_p.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_lw_diag_info_p.c</FilePath>
             </File>
             <File>
               <FileName>hw_mutex_handler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\hw_mutex_handler.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\hw_mutex_handler.c</FilePath>
             </File>
             <File>
               <FileName>dsp_config.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\dsp_config.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\dsp_config.c</FilePath>
             </File>
             <File>
               <FileName>logger.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\logger.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\logger.c</FilePath>
             </File>
             <File>
               <FileName>tunnel_access.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\tunnel_access.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\tunnel_access.c</FilePath>
             </File>
             <File>
               <FileName>common_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\common_util.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\common_util.c</FilePath>
             </File>
             <File>
               <FileName>chip_config.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chip_config.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chip_config.c</FilePath>
             </File>
             <File>
               <FileName>dsp_utils.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\dsp_utils.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\dsp_utils.c</FilePath>
             </File>
             <File>
               <FileName>host_chip_mem_map.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_chip_mem_map.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_chip_mem_map.c</FilePath>
             </File>
             <File>
               <FileName>host_avs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_avs.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_avs.c</FilePath>
             </File>
             <File>
               <FileName>host_diag_fec_statistics.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_diag_fec_statistics.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_diag_fec_statistics.c</FilePath>
             </File>
             <File>
               <FileName>host_diag_lw_p.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_diag_lw_p.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_diag_lw_p.c</FilePath>
             </File>
             <File>
               <FileName>host_diag_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_diag_util.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_diag_util.c</FilePath>
             </File>
             <File>
               <FileName>host_fec_prbs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_fec_prbs.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_fec_prbs.c</FilePath>
             </File>
             <File>
               <FileName>host_gpio_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_gpio_util.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_gpio_util.c</FilePath>
             </File>
             <File>
               <FileName>host_lw_wrapper.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_lw_wrapper.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_lw_wrapper.c</FilePath>
             </File>
             <File>
               <FileName>host_power_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\host_power_util.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\host_power_util.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_prbs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_prbs.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_prbs.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_xdec.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_xdec.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_xdec.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_rtmr_xenc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_rtmr_xenc.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_rtmr_xenc.c</FilePath>
             </File>
             <File>
               <FileName>chal_cw_utils.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\chal_cw_utils.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\chal_cw_utils.c</FilePath>
             </File>
             <File>
               <FileName>bcm_arm_platform.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\bcm_arm_platform.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\bcm_arm_platform.c</FilePath>
             </File>
             <File>
               <FileName>gd32_error_report.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\gd32_error_report.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\gd32_error_report.c</FilePath>
             </File>
             <File>
               <FileName>system_gd32e511_512.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\system\system_gd32e511_512.c</FilePath>
+              <FilePath>..\..\driver\mcu\system\system_gd32e511_512.c</FilePath>
             </File>
             <File>
               <FileName>bcm_gd32_i2c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\bcm_gd32_i2c.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\bcm_gd32_i2c.c</FilePath>
             </File>
             <File>
               <FileName>bcm_bsc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\projectfiles\src\bcm_bsc.c</FilePath>
+              <FilePath>..\..\driver\projectfiles\src\bcm_bsc.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -902,22 +952,72 @@
             <File>
               <FileName>mcu_clock.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\adpat\src\mcu_clock.c</FilePath>
+              <FilePath>..\..\driver\mcu\adpat\src\mcu_clock.c</FilePath>
             </File>
             <File>
               <FileName>timer2_scheduler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\adpat\src\timer2_scheduler.c</FilePath>
+              <FilePath>..\..\driver\mcu\adpat\src\timer2_scheduler.c</FilePath>
             </File>
             <File>
               <FileName>mcu_i2c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\adpat\src\mcu_i2c.c</FilePath>
+              <FilePath>..\..\driver\mcu\adpat\src\mcu_i2c.c</FilePath>
             </File>
             <File>
               <FileName>mcu_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\mcu\adpat\src\mcu_spi.c</FilePath>
+              <FilePath>..\..\driver\mcu\adpat\src\mcu_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>watchdog.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\mcu\adpat\src\watchdog.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>odsp_adapt</GroupName>
+          <Files>
+            <File>
+              <FileName>odsp_adapt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_adapt.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_lp_mode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_lp_mode.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_los_mon.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_los_mon.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_lasi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_lasi.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_opt_mon.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_opt_mon.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_serdes_profile.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_serdes_profile.c</FilePath>
+            </File>
+            <File>
+              <FileName>odsp_telemetry.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\odsp\adapt\odsp_telemetry.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -927,7 +1027,7 @@
             <File>
               <FileName>drv.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\drv\src\drv.c</FilePath>
+              <FilePath>..\..\driver\drv\src\drv.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -937,7 +1037,27 @@
             <File>
               <FileName>tia.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\driver\tia\src\tia.c</FilePath>
+              <FilePath>..\..\driver\tia\src\tia.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>pmic</GroupName>
+          <Files>
+            <File>
+              <FileName>pmic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\pmic\src\pmic.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>extflash</GroupName>
+          <Files>
+            <File>
+              <FileName>extflash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver\extflash\src\extflash.c</FilePath>
             </File>
           </Files>
         </Group>

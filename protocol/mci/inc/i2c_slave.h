@@ -91,4 +91,10 @@ VOID  I2cSlaveRegisterReadSource(VOID (*callback)(BYTE memaddr, BYTE *buf, DWORD
  * default; register again to override. */
 VOID  I2cSlaveRegisterReadDone(VOID (*callback)(BYTE memaddr, BYTE rdlen));
 
+/* 前台 hold-off 门（CMIS CDB foreground 模式）：on=1 → 模块对一切 host
+ * 事务 NACK（I2C_CTL1.NACKEN），host Acknowledge Polling 反复重试直到
+ * on=0。由 cdb.c 在命令执行期间置位/清除；CDB 执行期间 host 读写都被拒，
+ * 执行完成后读回最终 CdbStatus。 */
+VOID  I2cSlaveHoldOff(BYTE on);
+
 #endif

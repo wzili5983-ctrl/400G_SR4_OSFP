@@ -31,6 +31,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 #include "adcresource_impl.h"
+#include "monitor_impl.h"       /* g_SampleFilttedValues / MsaMonitorId_t */
 #include "chipresource_impl.h"
 #include "gpioresource_impl.h"
 #include "gd32e511_512.h"
@@ -61,7 +62,7 @@ STATIC CONST AdcInfo_t g_AdcInfoImpl[ADC_ID_NUM] = {
     {{CHIP_ID_MCU, ADC_CHANNEL_3, RSSI_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
     {{CHIP_ID_MCU, ADC_CHANNEL_21, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
     {{CHIP_ID_MCU, ADC_CHANNEL_22, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
-    {{CHIP_ID_MCU, ADC_CHANNEL_0, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
+    {{CHIP_ID_MCU, ADC_CHANNEL_10, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
     {{CHIP_ID_MCU, ADC_CHANNEL_11, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
     {{CHIP_ID_MCU, ADC_CHANNEL_12, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
     {{CHIP_ID_MCU, ADC_CHANNEL_13, MCU_AD_SAMPLE_GROUP, 0}, {BoardAdcRead, BoardAdcInit}},
@@ -85,8 +86,6 @@ STATIC CONST AdcPin_t g_AdcPinImpl[ADC_ID_NUM] = {
 
 /* DMA circular buffer: round 0 of all ADC_ID_NUM channels, then round 1, ... */
 STATIC volatile WORD g_AdSampleRawValues[ADC_ID_NUM * SAMPLE_TIMES];
-/* Median-mean filtered result per ADC ID, updated by the filter tasks. */
-STATIC WORD g_AdSampleFilttedValues[ADC_MSA_ID_NUM];
 /* 任务槽位统一存调度器集中表 g_TaskIds[TASK_ID_*]（timer2_scheduler.h）。 */
 
 CONST AdcInfo_t *GetAdcInfo(BYTE id)
@@ -94,27 +93,27 @@ CONST AdcInfo_t *GetAdcInfo(BYTE id)
     return id < ADC_ID_NUM ? &g_AdcInfoImpl[id] : NULL;
 }
 
-/* 读出指定 AdcMsaId_t 槽的滤波值——MAL 监视任务按 g_StdPerfMon[].adindex
- * 消费本接口（adindex 取值空间 = AdcMsaId_t）。ADC 未初始化完成或 id
+/* 读出指定 MsaMonitorId_t 槽的滤波值——MAL 监视任务按 g_StdPerfMon[].adindex
+ * 消费本接口（adindex 取值空间 = MsaMonitorId_t）。ADC 未初始化完成或 id
  * 非法时返回 ERR。 */
 DWORD GetAdcMsaFilteredValue(BYTE msaId, WORD *value)
 {
-    if(msaId >= ADC_MSA_ID_NUM || value == NULL || !g_AdcReady) {
+    if(msaId >= MON_MSA_ID_NUM || value == NULL || !g_AdcReady) {
         return ERR;
     }
-    *value = g_AdSampleFilttedValues[msaId];
+    *value = g_SampleFilttedValues[msaId];
     return OK;
 }
 
-/* 写 AdcMsaId_t 槽：GN1848 监视任务（driver/drv TaskTxAdSamples）等
+/* 写 MsaMonitorId_t 槽：GN1848 监视任务（driver/drv TaskTxAdSamples）等
  * 非 MCU-ADC 源的落槽入口；仅界检查，不依赖 g_AdcReady（TX 采集与
  * MCU ADC 初始化互相独立）。 */
 DWORD SetAdcMsaFilteredValue(BYTE msaId, WORD value)
 {
-    if(msaId >= ADC_MSA_ID_NUM) {
+    if(msaId >= MON_MSA_ID_NUM) {
         return ERR;
     }
-    g_AdSampleFilttedValues[msaId] = value;
+    g_SampleFilttedValues[msaId] = value;
     return OK;
 }
 
@@ -162,7 +161,7 @@ STATIC VOID TaskBaseAdSamples(VOID *arg)
     BYTE id;
     (void)arg;
     for(id = ADC_ID_CURRENT_MAIN; id < ADC_ID_NUM; ++id) {
-        g_AdSampleFilttedValues[ADC_MSA_ID_CURRENT_MAIN + (id - ADC_ID_CURRENT_MAIN)] = AdSampleMedianMeanFilter(id);
+        g_SampleFilttedValues[MON_MSA_ID_CURRENT_MAIN + (id - ADC_ID_CURRENT_MAIN)] = AdSampleMedianMeanFilter(id);
     }
 }
 
@@ -186,11 +185,11 @@ STATIC VOID TaskRssiAdSamples(VOID *arg)
         return;
     }
     if(level == IO_HIGH) {
-        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI0] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
-        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI3] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
+        g_SampleFilttedValues[MON_MSA_ID_RSSI0] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
+        g_SampleFilttedValues[MON_MSA_ID_RSSI3] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
     } else {
-        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI1] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
-        g_AdSampleFilttedValues[ADC_MSA_ID_RSSI2] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
+        g_SampleFilttedValues[MON_MSA_ID_RSSI1] = AdSampleMedianMeanFilter(ADC_ID_RSSI01_HIGH);
+        g_SampleFilttedValues[MON_MSA_ID_RSSI2] = AdSampleMedianMeanFilter(ADC_ID_RSSI23_HIGH);
     }
     if(sel->gpioops.GpioWrite != NULL) {
         sel->gpioops.GpioWrite(GPIO_ID_RSSI_SEL_HIGH, (level == IO_HIGH) ? IO_LOW : IO_HIGH);

@@ -32,23 +32,43 @@
 *******************************************************************************/
 #include "flashresource_impl.h"
 #include "gd32e511_512.h"
+#include "watchdog.h"   /* WatchdogKick：逐页擦除时喂狗防复位 */
+#ifndef BL_BUILD
+#include "extflash.h"
+#endif
 
 STATIC DWORD BoardFlashRead(BYTE id, DWORD offset, BYTE *data, DWORD len);
 STATIC DWORD BoardFlashWrite(BYTE id, DWORD offset, CONST BYTE *data, DWORD len);
 STATIC DWORD BoardFlashErase(BYTE id);
 STATIC DWORD BoardFlashVerifyHdr(BYTE id);
 STATIC DWORD BoardFlashCrc32(CONST VOID *data, DWORD len, DWORD *crc32);
+#ifndef BL_BUILD
+STATIC DWORD BoardExtFlashRead(BYTE id, DWORD offset, BYTE *data, DWORD len);
+STATIC DWORD BoardExtFlashWrite(BYTE id, DWORD offset, CONST BYTE *data, DWORD len);
+STATIC DWORD BoardExtFlashErase(BYTE id);
+#define DSP_FW_READ_OP     BoardExtFlashRead
+#define DSP_FW_WRITE_OP    BoardExtFlashWrite
+#define DSP_FW_ERASE_OP    BoardExtFlashErase
+#else
+/* BL keeps the same enum/table layout but has no external-flash access path. */
+#define DSP_FW_READ_OP     NULL
+#define DSP_FW_WRITE_OP    NULL
+#define DSP_FW_ERASE_OP    NULL
+#endif
 
 /* GD32E512 flash is programmed 64-bit at a time; offset/len must be 8-byte aligned. */
 #define FLASH_PROGRAM_UNIT   8U
+#define FLASH_OFFSET_INVALID 0xFFFFFFFFUL
+#define EXTFLASH_RW_CHUNK    1024U
 
 STATIC BOOL g_CrcReady;
 
 /* Expected frame magic template for the user-upgradeable regions
  * (VerifyHdr reference). */
-STATIC CONST FrameHead_t g_FrameTemplate = {0U, 0U, 0U, 0U, FRAME_COMPANY};
+STATIC CONST FrameHead_t g_FrameTemplate = {0U, 0U, {0U, 0U, 0U}, 0U, 0U, FRAME_COMPANY};
 
-/* The 11 memory_map.h flash regions in address order; attributes per FlashForm_t. */
+/* Physical resources in FlashId_t order. The external row keeps the same
+ * index in APP and BL; only APP binds real U15 operations. */
 STATIC CONST FlashInfo_t g_FlashInfoImpl[FLASH_ID_NUM] = {
     {{FLASH_ID_BOOTLOADER, FLASH_TYPE_BOOT,     0,  4, MEM_BOOT_BASE,        MEM_BOOT_SIZE,       TRUE},  {BoardFlashRead, BoardFlashWrite, BoardFlashErase, BoardFlashVerifyHdr}},
     {{FLASH_ID_KEY,        FLASH_TYPE_KEY,      4,  1, MEM_KEY_BASE,         MEM_KEY_SIZE,        TRUE},  {BoardFlashRead, BoardFlashWrite, BoardFlashErase, BoardFlashVerifyHdr}},
@@ -61,6 +81,7 @@ STATIC CONST FlashInfo_t g_FlashInfoImpl[FLASH_ID_NUM] = {
     {{FLASH_ID_PARA_B,     FLASH_TYPE_PARAM,   58,  4, MEM_PARAM_BACKUP_BASE,MEM_PARAM_AREA_SIZE, FALSE}, {BoardFlashRead, BoardFlashWrite, BoardFlashErase, BoardFlashVerifyHdr}},
     {{FLASH_ID_MISC_A,     FLASH_TYPE_MISC,    62,  1, MEM_MISC_A_BASE,      MEM_MISC_SIZE,       FALSE}, {BoardFlashRead, BoardFlashWrite, BoardFlashErase, BoardFlashVerifyHdr}},
     {{FLASH_ID_MISC_B,     FLASH_TYPE_MISC,    63,  1, MEM_MISC_B_BASE,      MEM_MISC_SIZE,       FALSE}, {BoardFlashRead, BoardFlashWrite, BoardFlashErase, BoardFlashVerifyHdr}},
+    {{FLASH_ID_DSP_FW,     FLASH_TYPE_EXTFLASH, 0,  0, MEM_DSP_FW_BASE,      MEM_DSP_FW_SIZE,     FALSE}, {DSP_FW_READ_OP, DSP_FW_WRITE_OP, DSP_FW_ERASE_OP, BoardFlashVerifyHdr}},
 };
 
 CONST FlashInfo_t *GetFlashInfo(BYTE id)
@@ -76,12 +97,59 @@ CONST FrameHead_t *GetFrameHead(BYTE id)
 {
     CONST FlashInfo_t *info = GetFlashInfo(id);
 
-    if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)) {
+    if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)
+       || info->flashform.type == FLASH_TYPE_EXTFLASH) {
         return NULL;
     }
 
-    /* Flash is memory-mapped (XIP); the frame header is read in place. */
+    /* Internal flash is memory-mapped (XIP); U15 must use ReadFrameHead(). */
     return (CONST FrameHead_t *)info->flashform.base;
+}
+
+DWORD FlashFrameHeaderOffset(BYTE id)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+
+    if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)) {
+        return FLASH_OFFSET_INVALID;
+    }
+    return (info->flashform.type == FLASH_TYPE_EXTFLASH) ? MEM_DSP_FW_META_BASE : 0U;
+}
+
+DWORD FlashFramePayloadOffset(BYTE id)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+
+    if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)) {
+        return FLASH_OFFSET_INVALID;
+    }
+    return (info->flashform.type == FLASH_TYPE_EXTFLASH) ? 0U : FRAME_PAYLOAD_OFF;
+}
+
+DWORD FlashFramePayloadCapacity(BYTE id)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+
+    if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)) {
+        return 0U;
+    }
+    if(info->flashform.type == FLASH_TYPE_EXTFLASH) {
+        return MEM_DSP_FW_PAYLOAD_CAP;
+    }
+    return (info->flashform.size >= FRAME_HDR_AREA_SIZE)
+         ? (info->flashform.size - FRAME_HDR_AREA_SIZE) : 0U;
+}
+
+DWORD ReadFrameHead(BYTE id, FrameHead_t *hdr)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+    DWORD offset = FlashFrameHeaderOffset(id);
+
+    if(info == NULL || hdr == NULL || offset == FLASH_OFFSET_INVALID
+       || info->flashops.FlashRead == NULL) {
+        return ERR;
+    }
+    return info->flashops.FlashRead(id, offset, (BYTE *)hdr, sizeof(*hdr));
 }
 
 /* FrameHead_t.company is a 16B 0xFF-padded ASCII slot; compare only the
@@ -99,23 +167,19 @@ STATIC BOOL FrameMagicMatch(CONST FrameHead_t *hdr)
     return TRUE;
 }
 
-/* Which frame header a slot may carry, per the fixed-A / mirror-B scheme.
- * Slot A (the fixed running region) only accepts a header that names A.
- * Slot B is the A-mirror region and the SOLE upgrade entry: every package
- * received into B must be A-named (flashid FLASH_ID_APP_A, storeaddr
- * MEM_APP_A_BASE) and byte-identical to the slot A image -- the B-named
- * package no longer exists, and even the factory / blank-device upgrade
- * goes through B first. Every other framed region only accepts a header
- * naming itself. */
+/* Logical (type, storeaddr) ownership rule for a physical target. APP_A and
+ * APP_B both carry the same APP/A-address image so BL can copy B to A without
+ * rewriting the header. PARAM/MISC name their own physical base; DSP_FW uses
+ * the external NOR's zero-based payload address. */
 STATIC BOOL FrameTargetsSlot(CONST FrameHead_t *hdr, CONST FlashInfo_t *info)
 {
-    BYTE id = info->flashform.flashid;
-
-    if(id == FLASH_ID_APP_B) {
-        return (BOOL)(hdr->flashid == FLASH_ID_APP_A && hdr->storeaddr == MEM_APP_A_BASE);
+    if(hdr == NULL || info == NULL || hdr->type != info->flashform.type) {
+        return FALSE;
     }
-
-    return (BOOL)(hdr->flashid == id && hdr->storeaddr == info->flashform.base);
+    if(info->flashform.type == FLASH_TYPE_APP) {
+        return (BOOL)(hdr->storeaddr == MEM_APP_A_BASE);
+    }
+    return (BOOL)(hdr->storeaddr == info->flashform.base);
 }
 
 /* On-chip CRC peripheral: poly 0x04C11DB7, init 0xFFFFFFFF, no reflection.
@@ -147,6 +211,13 @@ STATIC DWORD BoardFlashCrc32(CONST VOID *data, DWORD len, DWORD *crc32)
     *crc32 = BoardCrcAccum(data, len);
 
     return OK;
+}
+
+/* 导出包装：BL 提升流程改写 OtaInfo_t.state 后须重算 crc32（撕裂写守卫，
+ * 覆盖 0x00..0x37、本字段按 0 参与），与 OtaConfirm 同一 CRC 约定。 */
+DWORD FlashCrc32(CONST VOID *data, DWORD len, DWORD *crc32)
+{
+    return BoardFlashCrc32(data, len, crc32);
 }
 
 STATIC DWORD BoardFlashRead(BYTE id, DWORD offset, BYTE *data, DWORD len)
@@ -248,7 +319,103 @@ STATIC DWORD BoardFlashErase(BYTE id)
     return OK;
 }
 
-/* Common 128B frame header validation against a region instance: company
+#ifndef BL_BUILD
+/* U15 adapters keep the common FlashOps signature. Lengths are chunked before
+ * entering the WORD-length extflash API; all addresses are NOR offsets. */
+STATIC DWORD BoardExtFlashRead(BYTE id, DWORD offset, BYTE *data, DWORD len)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+    DWORD done = 0U;
+
+    if(info == NULL || info->flashform.type != FLASH_TYPE_EXTFLASH || data == NULL) {
+        return ERR;
+    }
+    if(offset >= info->flashform.size || len > (info->flashform.size - offset)) {
+        return ERR;
+    }
+    while(done < len) {
+        DWORD chunk = len - done;
+        if(chunk > EXTFLASH_RW_CHUNK) {
+            chunk = EXTFLASH_RW_CHUNK;
+        }
+        if(ExtFlashDataRead(offset + done, data + done, (WORD)chunk) != OK) {
+            return ERR;
+        }
+        done += chunk;
+    }
+    return OK;
+}
+
+STATIC DWORD BoardExtFlashWrite(BYTE id, DWORD offset, CONST BYTE *data, DWORD len)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+    DWORD done = 0U;
+
+    if(info == NULL || info->flashform.type != FLASH_TYPE_EXTFLASH || data == NULL) {
+        return ERR;
+    }
+    if(offset >= info->flashform.size || len > (info->flashform.size - offset)) {
+        return ERR;
+    }
+    while(done < len) {
+        DWORD chunk = len - done;
+        if(chunk > EXTFLASH_RW_CHUNK) {
+            chunk = EXTFLASH_RW_CHUNK;
+        }
+        if(ExtFlashProgram(offset + done, data + done, (WORD)chunk) != OK) {
+            return ERR;
+        }
+        done += chunk;
+    }
+    return OK;
+}
+
+STATIC DWORD BoardExtFlashErase(BYTE id)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+
+    if(info == NULL || info->flashform.type != FLASH_TYPE_EXTFLASH) {
+        return ERR;
+    }
+    return ExtFlashChipErase();
+}
+#endif
+
+/* 逐页擦除 + 每页喂狗（CDB 0101h Start 用）。APP 槽 23 页 × 8KB，整槽擦除约
+ * 数百 ms~1s，超过看门狗超时窗口：普通 EraseFlash 期间不喂狗会复位。与
+ * BoardFlashErase 同逻辑，仅每页擦除后插一脚 WatchdogKick。 */
+DWORD EraseFlashWithFeed(BYTE id)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+    DWORD page, addr;
+
+    if(info == NULL) {
+        return ERR;
+    }
+
+    if(info->flashform.wrp) {
+        return ERR;
+    }
+    if(info->flashform.type == FLASH_TYPE_EXTFLASH) {
+        return (info->flashops.FlashErase != NULL)
+             ? info->flashops.FlashErase(id) : ERR;
+    }
+
+    fmc_unlock();
+    for(page = 0; page < info->flashform.page_num; page++) {
+        addr = info->flashform.base + page * MEM_FLASH_PAGE_SIZE;
+        if(fmc_page_erase(addr) != FMC_READY) {
+            fmc_lock();
+            return ERR;
+        }
+        WatchdogKick();
+    }
+    fmc_lock();
+
+    return OK;
+}
+
+/* Common 112B frame header validation against a region instance: company
  * magic, targeting rules (FrameTargetsSlot), fwsize geometry and the header
  * CRC32 (crc32hdr field counted as 0). Shared by the flash-side check
  * below and the buffer-side VerifyFrameHdrBuf; the caller's header is
@@ -271,8 +438,8 @@ STATIC DWORD VerifyHdrCommon(CONST FrameHead_t *hdr, CONST FlashInfo_t *info)
     }
 
     if(hdr->fwsize == 0U
-       || hdr->fwsize > (info->flashform.size - FRAME_HDR_AREA_SIZE)
-       || (hdr->fwsize % FLASH_PROGRAM_UNIT) != 0U) {
+       || hdr->fwsize > FlashFramePayloadCapacity(info->flashform.flashid)
+       || (hdr->fwsize % 4U) != 0U) {
         return ERR;
     }
 
@@ -289,28 +456,24 @@ STATIC DWORD VerifyHdrCommon(CONST FrameHead_t *hdr, CONST FlashInfo_t *info)
     return OK;
 }
 
-/* Frame header sanity check on the flash-resident header, per APP_Slot.txt.
- * Valid on every FLASH_TYPE_HAS_FRAME region (APP / PARA / MISC A/B), all
- * sharing the same 128B FrameHead_t. Shallow check: the payload CRC32
- * (crc32data) is covered by VerifySlotImage (deep check, APP only). */
+/* Flash-resident header check for both XIP and external targets. The payload
+ * CRC is covered separately by VerifyFramedImage(). */
 STATIC DWORD BoardFlashVerifyHdr(BYTE id)
 {
     CONST FlashInfo_t *info = GetFlashInfo(id);
-    CONST FrameHead_t *hdr;
+    FrameHead_t hdr;
 
     if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)) {
         return ERR;
     }
-
-    hdr = GetFrameHead(id);
-    if(hdr == NULL) {
+    if(ReadFrameHead(id, &hdr) != OK) {
         return ERR;
     }
 
-    return VerifyHdrCommon(hdr, info);
+    return VerifyHdrCommon(&hdr, info);
 }
 
-/* OTA receive gate, per the upgrade flow: validate the 128B FrameHead_t
+/* OTA receive gate, per the upgrade flow: validate the 112B FrameHead_t
  * sitting in a RAM buffer (the SRAM OTA_RX buffer) against the targeting
  * rules of slot id BEFORE the first byte is programmed into flash. A
  * failed header stops the upgrade with the slot untouched. The caller's
@@ -341,9 +504,8 @@ DWORD InstallSlotImage(BYTE id, BYTE *bin, DWORD len)
         return ERR;
     }
 
-    /* Header sanity, before anything is programmed. Same targeting rules
-     * as BoardFlashVerifyHdr: slot B receives the A-named A-mirror image,
-     * slot A receives A-named only. The caller's buffer is NOT modified. */
+    /* Header sanity before programming: both physical APP slots accept the
+     * same FLASH_TYPE_APP + MEM_APP_A_BASE logical header. */
     hdr = (FrameHead_t *)bin;
     if(VerifyHdrCommon(hdr, info) != OK) {
         return ERR;
@@ -377,23 +539,27 @@ DWORD InstallSlotImage(BYTE id, BYTE *bin, DWORD len)
     return info->flashops.FlashWrite(id, 0U, bin, FRAME_HDR_AREA_SIZE);
 }
 
-DWORD VerifySlotImage(BYTE id)
+DWORD VerifyFramedImage(BYTE id)
 {
     STATIC BYTE buf[1024];
     CONST FlashInfo_t *info = GetFlashInfo(id);
-    CONST FrameHead_t *hdr;
-    DWORD body_len, done, chunk, crc32;
+    FrameHead_t hdr;
+    DWORD body_len, done, chunk, crc32 = 0U;
+    DWORD payload_off;
 
-    if(info == NULL || info->flashform.type != FLASH_TYPE_APP) {
+    if(info == NULL || !FLASH_TYPE_HAS_FRAME(info->flashform.type)
+       || info->flashops.FlashRead == NULL) {
+        return ERR;
+    }
+    if(ReadFrameHead(id, &hdr) != OK || VerifyHdrCommon(&hdr, info) != OK) {
         return ERR;
     }
 
-    hdr = GetFrameHead(id);
-    if(hdr == NULL || BoardFlashVerifyHdr(id) != OK) {
+    body_len = hdr.fwsize;
+    payload_off = FlashFramePayloadOffset(id);
+    if(payload_off == FLASH_OFFSET_INVALID) {
         return ERR;
     }
-
-    body_len = hdr->fwsize;
 
     BoardCrcBegin();
     for(done = 0U; done < body_len; done += chunk) {
@@ -402,12 +568,100 @@ DWORD VerifySlotImage(BYTE id)
             chunk = sizeof(buf);
         }
 
-        if(BoardFlashRead(id, FRAME_PAYLOAD_OFF + done, buf, chunk) != OK) {
+        if(info->flashops.FlashRead(id, payload_off + done, buf, chunk) != OK) {
             return ERR;
         }
         crc32 = BoardCrcAccum(buf, chunk);
     }
 
-    return (crc32 == hdr->crc32data) ? OK : ERR;
+    return (crc32 == hdr.crc32data) ? OK : ERR;
+}
+
+DWORD VerifySlotImage(BYTE id)
+{
+    CONST FlashInfo_t *info = GetFlashInfo(id);
+
+    if(info == NULL || info->flashform.type != FLASH_TYPE_APP) {
+        return ERR;
+    }
+    return VerifyFramedImage(id);
+}
+
+/* OTA upgrade confirm (CDB 0109h Run): build the 64B OtaInfo_t record
+ * (magic/ver/state/src + the slot-B image identity fields swver/fwsize/
+ * crc32data/crc32hdr + a persistent update_cnt + crc32 over 0x00..0x37),
+ * erase OTA metadata J-A and write it. The bootloader reads it on the next
+ * boot and promotes B -> A. The crc32 field lands after everything it
+ * covers, so a torn write is always caught. */
+
+/* A record is valid when the magic matches and the crc32 (over 0x00..0x37,
+ * this field counted as 0) passes. Used to read back the previous upgrade
+ * count; an erased (0xFF) or torn record reads invalid -> count restarts. */
+STATIC BOOL OtaInfoValid(CONST OtaInfo_t *r)
+{
+    DWORD crc32;
+    BYTE  i;
+
+    if(r == NULL) {
+        return FALSE;
+    }
+    for(i = 0U; i < (BYTE)(sizeof(OTA_INFO_MAGIC) - 1U); i++) {
+        if(r->magic[i] != (BYTE)OTA_INFO_MAGIC[i]) {
+            return FALSE;
+        }
+    }
+    if(BoardFlashCrc32(r, OTA_INFO_CRC_OFF, &crc32) != OK) {
+        return FALSE;
+    }
+    return (BOOL)(crc32 == r->crc32);
+}
+
+DWORD OtaConfirm(VOID)
+{
+    CONST FlashInfo_t *meta = GetFlashInfo(FLASH_ID_METADATA_A);
+    CONST FrameHead_t *hdr;
+    CONST OtaInfo_t   *prev;
+    OtaInfo_t info;
+    DWORD prev_cnt, crc32, i;
+
+    if(meta == NULL) {
+        return ERR;
+    }
+    hdr = GetFrameHead(FLASH_ID_APP_B);
+    if(hdr == NULL || BoardFlashVerifyHdr(FLASH_ID_APP_B) != OK) {
+        return ERR;   /* slot B has no valid frame header */
+    }
+
+    /* Previous upgrade count: keep it when the record is still valid, else
+     * restart from 0; increment by one for this upgrade. */
+    prev = (CONST OtaInfo_t *)meta->flashform.base;   /* XIP in-place read */
+    prev_cnt = OtaInfoValid(prev) ? prev->update_cnt : 0U;
+
+    for(i = 0U; i < sizeof(info); i++) {
+        ((BYTE *)&info)[i] = 0xFFU;                   /* rsvd stays erased 0xFF */
+    }
+    for(i = 0U; i < (sizeof(OTA_INFO_MAGIC) - 1U); i++) {
+        info.magic[i] = (BYTE)OTA_INFO_MAGIC[i];      /* first 8B "TBCOTAUP", rest 0xFF */
+    }
+    info.ver        = OTA_INFO_VER;
+    info.state      = OTA_ST_CONFIRMED;
+    info.src        = OTA_SRC_HOST;
+    for(i = 0U; i < FRAME_STR_SIZE; i++) {
+        info.swver[i] = hdr->swver[i];                /* target version (slot B copy) */
+    }
+    info.fwsize     = hdr->fwsize;
+    info.crc32data  = hdr->crc32data;
+    info.crc32hdr   = hdr->crc32hdr;
+    info.update_cnt = prev_cnt + 1U;
+
+    if(BoardFlashCrc32(&info, OTA_INFO_CRC_OFF, &crc32) != OK) {  /* 0x38=56B, %4==0 */
+        return ERR;
+    }
+    info.crc32 = crc32;
+
+    if(BoardFlashErase(FLASH_ID_METADATA_A) != OK) {
+        return ERR;
+    }
+    return BoardFlashWrite(FLASH_ID_METADATA_A, 0U, (CONST BYTE *)&info, sizeof(OtaInfo_t));
 }
 

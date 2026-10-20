@@ -77,6 +77,25 @@ DWORD WriteSramProtocolMsaPage(TabIndex_t page_id, CONST BYTE *buf);   /* 整页
  * 要参数检查的程序员侧访问请用上面的拷贝 API。 */
 #define ADPAT_MGMT_MAP_PAGE(i)      (&g_AdpatMgmtMapBuf[(DWORD)(i) * ADPAT_MGMT_PAGE_SIZE])
 
+/*================ 影子并发锁（线程侧；docs/memory_map.md 三写者模型规则 3） ================
+ * SRAM 影子被 I2C1 EV ISR（host 写帧 DtFrameCb 落影子、读帧 DtCorClear 清 COR
+ * 位、读相位 DtReadSource 快照）与任务线程（MSM/DPSM/Monitor 的读-改-写、
+ * B4H/B6H 整页拷贝、D9H 邮箱回填）并发访问。Cortex-M33 单字节访问原子，但
+ * 「读-改-写」与「多字节拷贝」整体不原子——线程侧执行期间若被 I2C1 EV ISR
+ * 抢占，会丢失 ISR 的写（RMW 丢更新）或读到撕裂快照（多字节）。
+ *
+ * AdpatShadowLock/Unlock 屏蔽 I2C1 EV/ER 中断，保留 SysTick(0)/Timer2(1) 等
+ * 高优先级中断，使临界区内影子稳定。约束：
+ *  - 仅线程上下文调用；ISR 内严禁调用（会自锁）——ISR 侧（DtFrameCb /
+ *    DtCorClear / DtReadSource 及 OPF_IMMEDIATE oprfunc）本身原子（执行期线程
+ *    冻结、且无其它 ISR 写影子），无需也不许上锁；
+ *  - 非嵌套、必须严格成对（NVIC 使能/禁止非保存-恢复，重入会提前解锁）；
+ *  - 临界区只包「影子读-改-写 / 多字节拷贝」本身，严禁 Flash 擦写、芯片 I2C
+ *    事务、延时等（I2C 从机靠 SCL 拉伸背压，预算 <2 字节时 ≈50µs @400kHz）。
+ */
+VOID AdpatShadowLock(VOID);
+VOID AdpatShadowUnlock(VOID);
+
 /*================ Flash 协议空间（用户参数·主区影子）访问 API ================
  * SRAM 影子（FLASH_ID_PARA_A，MEM_PARAM_MAIN_BASE 0x0806C000，32KB）的
  * 持久层：槽位布局与 SRAM [7] 影子同构（同用 ADPAT_MSA_SLOT_OFF 寻址），

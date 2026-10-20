@@ -12,9 +12,11 @@
  * 值——必须单次事务连续读，分两次单字节读会混入新转换值）：
  * DrvRead 发起 dummy-write 定址后一条 READ 连续收 [addr]=MSB、[addr+1]
  * =LSB，*data = 16bit（高字节 = 低地址）；访问 8bit 寄存器的调用者自取
- * 高 8 位。监视采集（TaskTxAdSamples：SRC-0 IBIAS → ADC_MSA_ID_LASER_
- * BIAS0..3 / ADC_MSA_ID_PWR_TX1..4，SRC-2 Temperature → ADC_MSA_ID_
- * LASER_TEMP，1s 周期）在 InitDrv 中配置（ADC_CTRL0/1）并注册调度任务。
+ * 高 8 位。监视采集（TaskTxAdSamples：CHx_CTRL0 IBIAS_DAC →
+ * MON_MSA_ID_LASER_BIAS0..3，ADC_CHx_SRC0 IBIAS → MON_MSA_ID_PWR_TX1..4
+ * （线性驱动无 Tx 光功率检测，IBIAS ADC 作 TxPwr 代理——产品约定★），
+ * ADC_CH0_SRC2 Temperature → MON_MSA_ID_LASER_TEMP，1s 周期）在
+ * InitDrv 中经 B4H 表配置（ADC_CTRL0/1）并注册调度任务。
  */
 #ifndef DRV_H
 #define DRV_H
@@ -29,9 +31,9 @@
 #define DRV_GCTRL8_SOFT_RESET     0x01U
 
 /* ADC monitor registers（DS Rev7 §3.3 / Table 4-1）：
- * SRC-0 = 每通道 VCSEL Bias Current(IBIAS)，15:0 RO，低地址为 MSB；
+ * SRC-0 = 每通道 VCSEL Bias Current(IBIAS)，15:0 RO，低地址为 MSB → PWR_TX 槽；
  * SRC-2 = Variable-1（由 ADC_CTRL1 4:2 选源：001=Temperature），
- * 芯片仅一个集成温度传感器，温度读 ch0 即可。 */
+ * 芯片仅一个集成温度传感器，温度读 ch0 即可 → LASER_TEMP 槽。 */
 #define DRV_REG_ADC_CTRL0         0x17U   /* bit0=ADC_EN；bits2:1=分辨率(01=9b,10=10b,11=12b) */
 #define DRV_REG_ADC_CTRL1         0x18U   /* bits4:2=Variable-1 源(001=Temp,010=VCC,100=VCC5)；bit0=1 允许 IBIAS 转换 */
 #define DRV_REG_ADC_CH0_SRC0      0x20U   /* IBIAS ch0 */
@@ -43,7 +45,22 @@
 #define DRV_ADC_CTRL0_EN_12BIT    0x07U
 #define DRV_ADC_CTRL1_TEMP_IBIAS  0x05U
 
+/* IBIAS_DAC 寄存器（DS Rev7 Table 4-1，每通道步进 0x10，10bit RW，复位 0x000）：
+ * IBIAS 电流设定位（Equation 3-2：DecimalCode = 69.0×[mA−1.0]）。
+ * LASER_BIAS 监视槽的代理源——固件对 VCSEL 偏置电流的指令值。 */
+#define DRV_REG_CH0_CTRL0         0x40U   /* IBIAS_DAC ch0 */
+#define DRV_REG_CH1_CTRL0         0x50U
+#define DRV_REG_CH2_CTRL0         0x60U
+#define DRV_REG_CH3_CTRL0         0x70U
+
+/* DrvWrite 入参 addr 的高字节 = 写宽度标志（B4H/B5H 表 ADDR 高字节，布局见 ral.h）：
+ * 0x00=8bit 写（tx=2：[addr, data&0xFF]）；0x01=16bit 单事务写（tx=3：
+ * [addr, data>>8, data&0xFF]，MSB-first 与 DrvRead 读相位一致）。 */
+#define DRV_WRITE_WIDTH_8BIT       0x00U
+#define DRV_WRITE_WIDTH_16BIT      0x01U
+
 DWORD InitDrv(BYTE rsttype);
+/* addr 高字节=宽度（DRV_WRITE_WIDTH_*），低字节=寄存器地址；data 为写入值。 */
 DWORD DrvWrite(BYTE id, DWORD addr, DWORD data);
 /* 16bit 单次事务读：*data 高字节 = [addr]（MSB first），低字节 = [addr+1]。
  * 访问 8bit 寄存器时调用者取 *data 高 8 位（(data >> 8) & 0xFF）。 */

@@ -15,7 +15,7 @@
  *
  * 覆盖 = CMIS 5.3 标准监视量：模块级 6（00h:14-25）+ lane 级 3×8
  * （Page 11h Bank0；SR4 仅 lane1-4 有实体，lane5-8 描述符保留，
- * adindex 填 NO_ADC_MSA_ID，监视任务整项跳过）。不入表：Page 12h
+ * adindex 填 NO_MON_MSA_ID，监视任务整项跳过）。不入表：Page 12h
  * （可调激光器，SR4 VCSEL 非可调）、VDM 20h-2Fh（厂商自定义扩展，
  * 后续单独描述符表）。
  */
@@ -24,7 +24,6 @@
 
 #include "basedef.h"
 #include "ral.h"                  /* TabIndex_t / PAGE_ID_* */
-#include "adcresource_impl.h"     /* AdcMsaId_t（adindex 取值空间） */
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +51,11 @@ extern "C" {
 #define MON_SCALE_FLOAT      5U    /* f32（IEEE 754）：校准系数（K/B）量纲——
                                     * 存厂商页影子（calcoe）；host 可见的监视
                                     * 值/阈值仍按上述整型 scale 编码发布 */
+/* ---- VDM 量纲（CMIS 5.3 Table 8-170 Data Type，vdm.c g_VdmInsInfo 用）---- */
+#define MON_SCALE_DB256      6U    /* U16，1/256 dB（SNR/LTP；Observable ID 5-8） */
+#define MON_SCALE_F16        7U    /* F16（Pre-FEC BER；ID 9-16） */
+#define MON_SCALE_U16CNT     8U    /* U16 计数（FERC；ID 17-26，源 WORD 饱和截断） */
+
 
 /** 表项缺省哨兵（页内偏移取值 0-127，0xFF 恒非法，作"无"标记）。 */
 #define MAL_MON_THR_NONE     0xFFU   /* thr.offset[]：该告警/警告类型无阈值 */
@@ -66,6 +70,72 @@ typedef enum {
     ALARM_HIGH,
     ALARM_WARNING_NUM
 } AlarmWarning_t;
+
+/** 统一监视量 ID：ADC 采集槽 + VDM 实例槽，g_SampleFilttedValues 下标。
+ *  原 AdcMsaId_t（ADC 槽）与 VDM 实例 ID 合并；ADC 槽在前保持兼容。 */
+typedef enum {
+    /* ---- ADC 采集槽（原 ADC_MSA_ID_*） ---- */
+    MON_MSA_ID_RSSI0 = 0,
+    MON_MSA_ID_RSSI1,
+    MON_MSA_ID_RSSI2,
+    MON_MSA_ID_RSSI3,
+    MON_MSA_ID_LASER_BIAS0,
+    MON_MSA_ID_LASER_BIAS1,
+    MON_MSA_ID_LASER_BIAS2,
+    MON_MSA_ID_LASER_BIAS3,
+    MON_MSA_ID_PWR_TX1,
+    MON_MSA_ID_PWR_TX2,
+    MON_MSA_ID_PWR_TX3,
+    MON_MSA_ID_PWR_TX4,
+    MON_MSA_ID_LASER_TEMP,
+    MON_MSA_ID_CURRENT_MAIN,
+    MON_MSA_ID_CURRENT_DSP,
+    MON_MSA_ID_MODULE_TEMP,
+    MON_MSA_ID_VCC_MON,
+    MON_MSA_ID_V5_VPD_MON,
+    MON_MSA_ID_V3P3_RAIL_MON,
+    MON_MSA_ID_V3P3_PHY_MON,
+    MON_MSA_ID_V1P8_MON,
+    MON_MSA_ID_STD_MON_NUM,
+    /* ---- VDM 实例槽 ---- */
+    MON_MSA_ID_SNR_MEDIA1=MON_MSA_ID_STD_MON_NUM,
+    MON_MSA_ID_SNR_MEDIA2,
+    MON_MSA_ID_SNR_MEDIA3,
+    MON_MSA_ID_SNR_MEDIA4,
+    MON_MSA_ID_SNR_HOST1,
+    MON_MSA_ID_SNR_HOST2,
+    MON_MSA_ID_SNR_HOST3,
+    MON_MSA_ID_SNR_HOST4,
+    MON_MSA_ID_LTP_MEDIA1,
+    MON_MSA_ID_LTP_MEDIA2,
+    MON_MSA_ID_LTP_MEDIA3,
+    MON_MSA_ID_LTP_MEDIA4,
+    MON_MSA_ID_LTP_HOST1,
+    MON_MSA_ID_LTP_HOST2,
+    MON_MSA_ID_LTP_HOST3,
+    MON_MSA_ID_LTP_HOST4,
+    MON_MSA_ID_BER_CUR_MEDIA,
+    MON_MSA_ID_BER_AVG_MEDIA,
+    MON_MSA_ID_BER_MIN_MEDIA,
+    MON_MSA_ID_BER_MAX_MEDIA,
+    MON_MSA_ID_BER_CUR_HOST,
+    MON_MSA_ID_BER_AVG_HOST,
+    MON_MSA_ID_BER_MIN_HOST,
+    MON_MSA_ID_BER_MAX_HOST,
+    MON_MSA_ID_FERC_CUR_MEDIA,
+    MON_MSA_ID_FERC_AVG_MEDIA,
+    MON_MSA_ID_FERC_MIN_MEDIA,
+    MON_MSA_ID_FERC_MAX_MEDIA,
+    MON_MSA_ID_FERC_CUR_HOST,
+    MON_MSA_ID_FERC_AVG_HOST,
+    MON_MSA_ID_FERC_TOT_MEDIA,
+    MON_MSA_ID_FERC_TOT_HOST,
+    MON_MSA_ID_NUM
+} MsaMonitorId_t;
+
+/** adindex/sampleId 的「无采集源」标记（如 SR4 无实体的 lane5-8）：
+ *  0xFF 超出 MsaMonitorId_t 值域，GetAdcMsaFilteredValue 的界检查会拒收。 */
+#define NO_MON_MSA_ID   0xFFU
 
 /* cal 契约：info = 本表项指针（VOID* 形参，函数内转 PerfMonInfo_t*）。
  * 原始采样由 info->adindex 经 GetAdcMsaFilteredValue 定位；标定系数经
@@ -131,7 +201,7 @@ typedef struct {
 
 /** 标准性能监视器表项（描述符 + 运行时缓存的复合体；表本体 RAM 私有）。 */
 typedef struct PerfMonInfo_t {
-    AdcMsaId_t             adindex;   /* ADC 索引（AdcMsaId_t；NO_ADC_MSA_ID = 无采集源） */
+    MsaMonitorId_t         adindex;   /* 采样源（MsaMonitorId_t；NO_MON_MSA_ID = 无采集源） */
     PerfCal                cal;       /* 性能计算函数（NULL = 监视任务按 scale 默认换算） */
     PerfMonValueForm_t     value;     /* 监视值落点 + 编码值缓存 */
     PerfMonFlagForm_t      flag;      /* Alarm/Warning Flag 落点（COR，引擎读后清） */
@@ -142,7 +212,7 @@ typedef struct PerfMonInfo_t {
 
 /** 标准性能监视器 ID = g_StdPerfMon 下标（表项身份由枚举给出，结构内
  *  不再存类型/lane 字段）。命名：LASER_BIAS1..8（1 起始）↔
- *  ADC_MSA_ID_LASER_BIAS0..3（0 起始），表内显式对应。 */
+ *  MON_MSA_ID_LASER_BIAS0..3（0 起始），表内显式对应。 */
 typedef enum {
     PERF_MON_TEMPERATURE,
     PERF_MON_VOLTAGE,
@@ -185,6 +255,9 @@ CONST PerfMonInfo_t *MonGetStdPerfMonEntry(PerfMon_t id);
  *  （monitor.c，cal 需写 value.perfvalue）；其余外部一律用只读版。
  *  id 越界返回 NULL。 */
 PerfMonInfo_t *MonGetStdPerfMonEntryRw(PerfMon_t id);
+
+/** 统一采样缓冲（ADC + VDM 原始值），monitor_impl.c 定义。 */
+extern WORD g_SampleFilttedValues[MON_MSA_ID_NUM];
 
 #ifdef __cplusplus
 }

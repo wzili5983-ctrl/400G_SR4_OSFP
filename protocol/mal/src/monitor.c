@@ -28,7 +28,7 @@
  ******************************************************************************/
 #include "monitor.h"
 #include "monitor_impl.h"        /* g_StdPerfMon / PerfMonInfo_t / MAL_MON_* */
-#include "adcresource_impl.h"    /* GetAdcMsaFilteredValue / NO_ADC_MSA_ID */
+#include "adcresource_impl.h"    /* GetAdcMsaFilteredValue / NO_MON_MSA_ID */
 #include "adpat.h"               /* Read/WriteSramProtocolMsaSpace（影子） */
 #include "msl.h"                 /* MslIntRstnModeSet（INT/RSTn 管脚模式） */
 #include "timer2_scheduler.h"    /* Timer2SchedulerAdd / g_TaskIds */
@@ -40,11 +40,17 @@
 
 volatile BYTE g_MonIntPending = 0U;
 
-/* 影子 2B 大端读写（CMIS 多字节字段字节序） */
+/* 影子 2B 大端读写（CMIS 多字节字段字节序）。多字节拷贝须影子锁内
+ * （线程上下文：防 I2C1 ISR 并发写撕裂）。 */
 STATIC DWORD MonShadowRead16(TabIndex_t tab, BYTE offset, WORD *val)
 {
     BYTE b[2];
-    if(ReadSramProtocolMsaSpace(tab, offset, b, 2U) != OK) { return ERR; }
+    AdpatShadowLock();
+    if(ReadSramProtocolMsaSpace(tab, offset, b, 2U) != OK) {
+        AdpatShadowUnlock();
+        return ERR;
+    }
+    AdpatShadowUnlock();
     *val = (WORD)(((WORD)b[0] << 8) | (WORD)b[1]);
     return OK;
 }
@@ -52,9 +58,13 @@ STATIC DWORD MonShadowRead16(TabIndex_t tab, BYTE offset, WORD *val)
 STATIC DWORD MonShadowWrite16(TabIndex_t tab, BYTE offset, WORD val)
 {
     BYTE b[2];
+    DWORD r;
     b[0] = (BYTE)(val >> 8);
     b[1] = (BYTE)val;
-    return WriteSramProtocolMsaSpace(tab, offset, b, 2U);
+    AdpatShadowLock();
+    r = WriteSramProtocolMsaSpace(tab, offset, b, 2U);
+    AdpatShadowUnlock();
+    return r;
 }
 
 /** 默认换算（cal = NULL 的表项）：raw 按本条目 value.scale 默认换算入
@@ -104,11 +114,13 @@ STATIC VOID MonFlagUpdate(CONST PerfMonInfo_t *info, WORD val)
         if(violated != 0U)
         {
             BYTE fb;
+            AdpatShadowLock();    /* COR 字节 RMW：锁内防 DtCorClear 清零交错丢更新 */
             if(ReadSramProtocolMsaSpace(info->flag.tab, info->flag.offset[idx], &fb, 1U) == OK)
             {
                 fb |= (BYTE)(1U << info->flag.bits[idx]);    /* RMW 只置位，不写 0 */
                 (VOID)WriteSramProtocolMsaSpace(info->flag.tab, info->flag.offset[idx], &fb, 1U);
             }
+            AdpatShadowUnlock();
         }
     }
 }
@@ -162,7 +174,7 @@ VOID MonTask(VOID *arg)
     {
         PerfMonInfo_t *info = MonGetStdPerfMonEntryRw((PerfMon_t)i);
         if(info == NULL) { continue; }
-        if((BYTE)info->adindex == (BYTE)NO_ADC_MSA_ID) { continue; }    /* 无采集源：整项跳过 */
+        if((BYTE)info->adindex == (BYTE)NO_MON_MSA_ID) { continue; }    /* 无采集源：整项跳过 */
         if(info->cal != NULL)
         {
             if(info->cal((VOID *)info) != OK) { continue; }             /* 本次跳过发布 */

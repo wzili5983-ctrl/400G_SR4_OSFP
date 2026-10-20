@@ -171,6 +171,19 @@ VOID I2cSlaveRegisterReadDone(VOID (*callback)(BYTE memaddr, BYTE rdlen))
     g_ReadDoneCb = callback;
 }
 
+/* 前台 hold-off：置 I2C_CTL1.NACKEN（bit15）→ 从机对 host 地址相位 NACK，
+ * 所有事务被拒；清除位即恢复应答。库只提供 i2c_nack_enable 无 disable，
+ * 清位须直接写 I2C_CTL1。ISR/线程双上下文都可能调（CDB 触发在 ISR、收尾
+ * 在主循环），单 bit 写原子，无需锁。 */
+VOID I2cSlaveHoldOff(BYTE on)
+{
+    if(on != 0U) {
+        i2c_nack_enable(I2C1);
+    } else {
+        I2C_CTL1(I2C1) &= ~(uint32_t)I2C_CTL1_NACKEN;
+    }
+}
+
 /* I2C1 event interrupt: address match / rx byte / tx empty / stop. */
 void I2C1_EV_IRQHandler(void)
 {
